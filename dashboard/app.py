@@ -307,6 +307,26 @@ st.markdown(f"""
     .st-key-expiry_panel {{
         margin-top: 1.5rem;
     }}
+
+    /* ===== "+" add-field button — smaller, ghost style so it reads as an ===== */
+    /* ===== inline control rather than a full primary action button.     ===== */
+    .st-key-add_field_btn button {{
+        background-color: transparent !important;
+        color: {THEME["accent_active"] if not dark_mode else THEME["accent"]} !important;
+        border: 1px dashed {THEME["border"]} !important;
+        box-shadow: none !important;
+        width: 100%;
+    }}
+
+    .st-key-add_field_btn button:hover {{
+        border-color: {THEME["accent"]} !important;
+        background-color: {THEME["surface_alt"]} !important;
+    }}
+
+    /* Remove-field "✕" buttons — compact square icon buttons */
+    div[data-testid="column"] .stButton button[kind] {{
+        padding: 10px 12px !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -392,7 +412,45 @@ with st.container(border=True, key="view_panel"):
         st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
 
         admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
-        target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
+
+        # --- Dynamic "Fields to Encrypt" list, replaces the old single ---
+        # --- comma-separated text input with a proper +/- add/remove UI. ---
+        st.caption("Fields to Encrypt")
+
+        if "encrypt_fields" not in st.session_state:
+            st.session_state.encrypt_fields = ["sensitive_data"]
+
+        fields_to_remove = None
+        for i in range(len(st.session_state.encrypt_fields)):
+            field_col, remove_col = st.columns([6, 1])
+            with field_col:
+                st.session_state.encrypt_fields[i] = st.text_input(
+                    f"Field {i + 1}",
+                    value=st.session_state.encrypt_fields[i],
+                    key=f"encrypt_field_{i}",
+                    label_visibility="collapsed",
+                    placeholder="e.g. sensitive_data",
+                )
+            with remove_col:
+                # Only offer removal if more than one field remains, so the
+                # list can never be emptied down to zero rows.
+                if len(st.session_state.encrypt_fields) > 1:
+                    if st.button("✕", key=f"remove_field_{i}"):
+                        fields_to_remove = i
+
+        if fields_to_remove is not None:
+            st.session_state.encrypt_fields.pop(fields_to_remove)
+            st.rerun()
+
+        if st.button("＋ Add Field", key="add_field_btn"):
+            st.session_state.encrypt_fields.append("")
+            st.rerun()
+
+        # Build the comma-separated string the backend API expects, from
+        # whatever non-empty fields the user has added via the UI above.
+        target_fields = ",".join(
+            f.strip() for f in st.session_state.encrypt_fields if f.strip()
+        )
 
         if st.button("Apply Security Policies"):
             headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
