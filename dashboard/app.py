@@ -8,7 +8,7 @@ from pathlib import Path
 st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 
 # --- BACKGROUND IMAGE (base64 embed so it works local or deployed) ---
-BG_IMAGE_PATH = "cyber-background-8k.png"
+BG_IMAGE_PATH = "cyber-background-8k.png.disabled"
 
 @st.cache_data
 def get_base64_image(image_path):
