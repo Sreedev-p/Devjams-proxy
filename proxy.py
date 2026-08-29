@@ -4,7 +4,8 @@ import asyncio
 import os
 from contextlib import asynccontextmanager
 from typing import Optional
-
+from typing import Optional
+from fastapi import Header, HTTPException
 import httpx
 from fastapi import FastAPI, Request, HTTPException, Response, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,9 +49,13 @@ def get_target_fields() -> set[str]:
     return set(fields) if fields else DEFAULT_TARGET_FIELDS
 
 
-def verify_admin(x_admin_key: Optional[str] = Header(default=None)):
+def verify_admin(x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
+    if not x_admin_key:
+        raise HTTPException(status_code=401, detail="Missing Admin Key")
+
     if x_admin_key != ADMIN_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid Admin Key")
+
     return True
 
 
