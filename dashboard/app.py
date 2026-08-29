@@ -315,7 +315,9 @@ st.markdown(f"""
         color: {THEME["accent_active"] if not dark_mode else THEME["accent"]} !important;
         border: 1px dashed {THEME["border"]} !important;
         box-shadow: none !important;
-        width: 100%;
+        width: auto;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
     }}
 
     .st-key-add_field_btn button:hover {{
@@ -411,32 +413,46 @@ with st.container(border=True, key="view_panel"):
 
         st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
 
-        admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
+        # Admin key box no longer stretches the full panel width — a
+        # password/key field doesn't need that much horizontal space.
+        key_col, _spacer = st.columns([2, 3])
+        with key_col:
+            admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
 
         # --- Dynamic "Fields to Encrypt" list, replaces the old single ---
         # --- comma-separated text input with a proper +/- add/remove UI. ---
+        # Fields are packed two-per-row instead of one wide box per row, so
+        # the leftover horizontal space is used for the next field instead
+        # of sitting empty.
         st.caption("Fields to Encrypt")
 
         if "encrypt_fields" not in st.session_state:
             st.session_state.encrypt_fields = ["sensitive_data"]
 
         fields_to_remove = None
-        for i in range(len(st.session_state.encrypt_fields)):
-            field_col, remove_col = st.columns([6, 1])
-            with field_col:
-                st.session_state.encrypt_fields[i] = st.text_input(
-                    f"Field {i + 1}",
-                    value=st.session_state.encrypt_fields[i],
-                    key=f"encrypt_field_{i}",
-                    label_visibility="collapsed",
-                    placeholder="e.g. sensitive_data",
-                )
-            with remove_col:
-                # Only offer removal if more than one field remains, so the
-                # list can never be emptied down to zero rows.
-                if len(st.session_state.encrypt_fields) > 1:
-                    if st.button("✕", key=f"remove_field_{i}"):
-                        fields_to_remove = i
+        field_list = st.session_state.encrypt_fields
+        for row_start in range(0, len(field_list), 2):
+            row_cols = st.columns([3, 1, 3, 1])
+            for offset in range(2):
+                idx = row_start + offset
+                if idx >= len(field_list):
+                    break
+                field_col = row_cols[offset * 2]
+                remove_col = row_cols[offset * 2 + 1]
+                with field_col:
+                    field_list[idx] = st.text_input(
+                        f"Field {idx + 1}",
+                        value=field_list[idx],
+                        key=f"encrypt_field_{idx}",
+                        label_visibility="collapsed",
+                        placeholder="e.g. sensitive_data",
+                    )
+                with remove_col:
+                    # Only offer removal if more than one field remains, so
+                    # the list can never be emptied down to zero rows.
+                    if len(field_list) > 1:
+                        if st.button("✕", key=f"remove_field_{idx}"):
+                            fields_to_remove = idx
 
         if fields_to_remove is not None:
             st.session_state.encrypt_fields.pop(fields_to_remove)
