@@ -151,7 +151,6 @@ st.markdown(f"""
 
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
-# dashboard/app.py (around line 8)
 PROXY_URL = "https://6e3319dd2e30ff.lhr.life"
 BACKEND_URL = "https://bd2dfb593379b0.lhr.life"
 
@@ -182,7 +181,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Read-only live view of current active fields (no auth required)
     if st.button("🔄 View Current Active Fields"):
         try:
             cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
@@ -253,15 +251,10 @@ st.divider()
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     st.subheader("⏱️ Live Expiry & Retrieval Test")
 
-    st.button("🔄 Refresh Timer")
+    # 1. Create the placeholder FIRST so it renders above the buttons
+    timer_placeholder = st.empty()
 
-    remaining = int(st.session_state["expiry_time"] - time.time())
-
-    if remaining > 0:
-        st.warning(f"Key TTL active: {remaining}s remaining before cryptographic shredding...")
-    else:
-        st.error("TTL expired! Cryptographic key has been mathematically shredded in the Vault.")
-
+    # 2. Render the Action Button (visible and clickable while timer runs)
     if st.button("Attempt Decrypted Read via Proxy"):
         rec_id = st.session_state["last_record_id"]
         try:
@@ -277,3 +270,21 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
                 st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
         except requests.exceptions.ConnectionError:
             st.error("Cannot connect to Proxy for retrieval.")
+
+    # 3. Execute the Live Countdown Loop at the absolute bottom of the script
+    remaining = int(st.session_state["expiry_time"] - time.time())
+
+    if remaining > 0:
+        if remaining <= 60: 
+            # Live ticking animation for short demo durations
+            while remaining > 0:
+                timer_placeholder.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
+                time.sleep(1)
+                remaining = int(st.session_state["expiry_time"] - time.time())
+            
+            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+        else:
+            # Static view for long TTLs to prevent infinite loop locking
+            timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
+    else:
+        timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
