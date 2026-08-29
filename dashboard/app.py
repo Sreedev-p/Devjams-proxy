@@ -14,7 +14,19 @@ with col1:
     st.subheader("👤 Client / Application View")
     user_name = st.text_input("Customer Name", "Alice Smith")
     sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
-    ttl = st.slider("Time-To-Live (Seconds)", min_value=5, max_value=60, value=10)
+    
+    # --- UPDATED TTL SELECTION ---
+    ttl_options = {
+        "15 Seconds (Live Pitch Demo)": 15,
+        "30 Seconds (Standard Demo)": 30,
+        "1 Hour (Temporary Cache)": 3600,
+        "24 Hours (Daily Rotation)": 86400,
+        "30 Days (Standard Compliance)": 2592000,
+        "1 Year (Enterprise Archival)": 31536000
+    }
+    selected_ttl = st.selectbox("Data Retention Policy (Time-To-Live)", list(ttl_options.keys()))
+    ttl = ttl_options[selected_ttl] # Extracts the actual seconds
+    # -----------------------------
     
     if st.button("Submit Sensitive Data"):
         payload = {
@@ -27,7 +39,7 @@ with col1:
             if res.status_code == 201:
                 st.session_state["last_record_id"] = res.json().get("id")
                 st.session_state["expiry_time"] = time.time() + ttl
-                st.success("Data securely routed through Proxy!")
+                st.success(f"Data routed through Proxy with a {selected_ttl} retention policy!")
             else:
                 st.error(f"Proxy Error: {res.status_code} - {res.text}")
         except requests.exceptions.ConnectionError:
@@ -57,12 +69,12 @@ st.divider()
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     st.subheader("⏱️ Live Expiry & Retrieval Test")
     
-    # Allows judges to see the time updating without refreshing the whole page
     st.button("🔄 Refresh Timer")
     
     remaining = int(st.session_state["expiry_time"] - time.time())
     
     if remaining > 0:
+        # If the user selects 1 Year, it will just show a massive number of seconds remaining, which proves the math works!
         st.warning(f"Key TTL active: {remaining}s remaining before cryptographic shredding...")
     else:
         st.error("TTL expired! Cryptographic key has been mathematically shredded in the Vault.")
