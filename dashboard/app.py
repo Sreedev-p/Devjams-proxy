@@ -19,32 +19,33 @@ TUNNEL_HEADERS = {
     "User-Agent": "DataExpiry-App/1.0",
 }
 
-# --- Premium palette: near-black base, warm off-white text, champagne-gold
-# accent instead of a bright neon tone. Cards use a subtle translucent
-# "glass" surface rather than flat opaque panels. ---
+# --- Premium cybersecurity palette: near-black navy base, cool steel-blue
+# text, and a controlled "signal blue" accent — the register used by
+# security/threat-intel dashboards (deep, technical, quietly confident)
+# rather than a bright consumer-app color. ---
 THEME = {
-    "bg": "#0A0A0C",
-    "bg_glow": "rgba(212, 175, 55, 0.05)",
+    "bg": "#070A10",
+    "bg_glow": "rgba(59, 130, 246, 0.07)",
     "surface": "rgba(255, 255, 255, 0.035)",
-    "surface_solid": "#131318",
+    "surface_solid": "#0E131C",
     "surface_alt": "rgba(255, 255, 255, 0.055)",
-    "border": "rgba(255, 255, 255, 0.09)",
-    "border_strong": "rgba(212, 175, 55, 0.35)",
-    "text": "#F3F1EA",
-    "muted": "#9B968C",
-    "accent": "#D4AF37",
-    "accent_soft": "#C9A961",
-    "accent_hover": "#E8C468",
-    "accent_text": "#0A0A0C",
-    "success": "#8FBF9F",
-    "warning": "#D9B36C",
-    "danger": "#C97B7B",
+    "border": "rgba(148, 163, 184, 0.14)",
+    "border_strong": "rgba(59, 130, 246, 0.45)",
+    "text": "#E7ECF3",
+    "muted": "#8B96A5",
+    "accent": "#3B82F6",
+    "accent_soft": "#5B9DFF",
+    "accent_hover": "#5B9DFF",
+    "accent_text": "#04070C",
+    "success": "#34D399",
+    "warning": "#F5C56C",
+    "danger": "#F1706E",
 }
 
 st.markdown(
     f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
     html, body, [class*="css"] {{
         font-family: 'Inter', sans-serif;
@@ -61,9 +62,11 @@ st.markdown(
 
     [data-testid="stAppViewContainer"] {{
         background:
-            radial-gradient(circle at 12% 0%, {THEME["bg_glow"]}, transparent 40%),
-            radial-gradient(circle at 88% 100%, rgba(212, 175, 55, 0.035), transparent 45%),
+            radial-gradient(circle at 10% -5%, {THEME["bg_glow"]}, transparent 42%),
+            radial-gradient(circle at 90% 105%, rgba(59, 130, 246, 0.05), transparent 46%),
+            radial-gradient(circle, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
             {THEME["bg"]};
+        background-size: auto, auto, 26px 26px, auto;
     }}
 
     .block-container {{
@@ -140,15 +143,15 @@ st.markdown(
         box-shadow: 0 0 0 1px {THEME["accent"]} !important;
     }}
 
-    /* --- Buttons: soft gold, not neon --- */
+    /* --- Buttons: controlled signal-blue, no neon glow --- */
     .stButton button {{
-        background: linear-gradient(180deg, {THEME["accent_hover"]} 0%, {THEME["accent"]} 100%) !important;
-        color: {THEME["accent_text"]} !important;
+        background: linear-gradient(180deg, {THEME["accent_soft"]} 0%, {THEME["accent"]} 100%) !important;
+        color: #FFFFFF !important;
         border: none !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
         padding: 0.65rem 1rem !important;
-        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.18);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.20);
         transition: filter 0.15s ease, transform 0.15s ease;
     }}
 
@@ -207,16 +210,16 @@ st.markdown(
         display: none !important;
     }}
 
-    /* Highlight whichever tab is actually selected — soft gold, not a
-       loud fill, to stay in the premium register. */
+    /* Highlight whichever tab is actually selected — a controlled blue
+       wash, not a loud fill. */
     div[role="radiogroup"] label:has(input:checked) {{
-        background: linear-gradient(180deg, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.14) 100%) !important;
+        background: linear-gradient(180deg, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0.14) 100%) !important;
         border-color: {THEME["accent"]} !important;
-        box-shadow: 0 6px 18px rgba(212, 175, 55, 0.12);
+        box-shadow: 0 6px 18px rgba(59, 130, 246, 0.16);
     }}
 
     div[role="radiogroup"] label:has(input:checked) p {{
-        color: {THEME["accent"]} !important;
+        color: {THEME["accent_soft"]} !important;
         font-weight: 600;
     }}
 
@@ -244,24 +247,26 @@ st.markdown(
         right: -10%;
         width: 320px;
         height: 320px;
-        background: radial-gradient(circle, rgba(212, 175, 55, 0.14), transparent 70%);
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 70%);
         pointer-events: none;
     }}
 
     .hero-eyebrow {{
-        color: {THEME["accent"]};
+        color: {THEME["accent_soft"]};
         font-size: 0.76rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.14em;
+        font-family: 'JetBrains Mono', monospace;
         position: relative;
     }}
 
     .hero-title {{
-        font-family: 'Playfair Display', serif;
+        font-family: 'Space Grotesk', sans-serif;
         color: {THEME["text"]};
-        font-size: 2.4rem;
-        font-weight: 600;
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
         line-height: 1.15;
         margin-top: 0.5rem;
         margin-bottom: 0.5rem;
