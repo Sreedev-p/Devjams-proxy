@@ -146,6 +146,12 @@ st.markdown(f"""
     .stJson {{
         font-size: 13px !important;
     }}
+    
+    /* Tab Styling */
+    .stTabs [data-baseweb="tab-list"] button {{
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 18px !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -199,11 +205,13 @@ with st.sidebar:
         except requests.exceptions.ConnectionError:
             st.warning("Proxy unreachable.")
 
-# --- Main Split-Screen UI ---
-col1, col2 = st.columns(2)
+# =========================================================
+# MAIN UI: Tabbed Views
+# =========================================================
+tab1, tab2 = st.tabs(["👤 Client / Application View", "🕵️ Hacker View (Target Database)"])
 
-with col1:
-    st.subheader("👤 Client / Application View")
+with tab1:
+    st.subheader("Client Details")
     user_name = st.text_input("Customer Name", "Alice Smith")
     sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
@@ -235,8 +243,8 @@ with col1:
         except requests.exceptions.ConnectionError:
             st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
-with col2:
-    st.subheader("🕵️ Hacker View (Target Database)")
+with tab2:
+    st.subheader("Target Database Contents")
     st.info("Live peek inside `company_database.db`:")
 
     if st.button("Refresh Database View"):
