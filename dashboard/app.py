@@ -50,8 +50,8 @@ st.markdown("""
 
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
-PROXY_URL = "http://127.0.0.1:8000"
-BACKEND_URL = "http://127.0.0.1:5000" 
+PROXY_URL = "https://2c873f1cfce6a1.lhr.life" # Added the closing quote
+BACKEND_URL = "https://<THE_NEW_URL>.lhr.life" # The tunnel to port 5000
 
 # --- Main Split-Screen UI ---
 col1, col2 = st.columns(2)
