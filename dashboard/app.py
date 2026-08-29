@@ -276,7 +276,7 @@ TUNNEL_HEADERS = {
 }
 
 # --- Switchable View ---
-st.caption("SWITCH VIEW")
+st.caption("")
 active_view = st.radio(
     "View",
     ["User View", "Hacker View", "Admin View", "SOC Dashboard"],
