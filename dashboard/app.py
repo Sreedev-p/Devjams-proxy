@@ -34,15 +34,6 @@ if dark_mode:
         "button_shadow": "0 0 0 1px rgba(245, 208, 51, 0.12), 0 6px 20px rgba(245, 208, 51, 0.16)",
         "button_shadow_hover": "0 0 0 1px rgba(245, 208, 51, 0.2), 0 8px 26px rgba(245, 208, 51, 0.26)",
         "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.35)",
-        "role_user": "#F5D033",
-        "role_user_text": "#14140F",
-        "role_user_shadow": "0 0 0 1px rgba(245, 208, 51, 0.18), 0 6px 20px rgba(245, 208, 51, 0.22)",
-        "role_hacker": "#FF4D5E",
-        "role_hacker_text": "#FFFFFF",
-        "role_hacker_shadow": "0 0 0 1px rgba(255, 77, 94, 0.2), 0 6px 20px rgba(255, 77, 94, 0.26)",
-        "role_admin": "#3E7BFA",
-        "role_admin_text": "#FFFFFF",
-        "role_admin_shadow": "0 0 0 1px rgba(62, 123, 250, 0.2), 0 6px 20px rgba(62, 123, 250, 0.26)",
     }
 else:
     THEME = {
@@ -61,15 +52,6 @@ else:
         "button_shadow": "none",
         "button_shadow_hover": "none",
         "card_shadow": "0 1px 2px rgba(20, 20, 15, 0.04)",
-        "role_user": "#F5D033",
-        "role_user_text": "#14140F",
-        "role_user_shadow": "none",
-        "role_hacker": "#FF4D5E",
-        "role_hacker_text": "#FFFFFF",
-        "role_hacker_shadow": "none",
-        "role_admin": "#3E7BFA",
-        "role_admin_text": "#FFFFFF",
-        "role_admin_shadow": "none",
     }
 
 # --- CUSTOM THEME (CSS INJECTION) - "TEAK-STYLE" REDESIGN, LIGHT + DARK ---
@@ -222,48 +204,47 @@ st.markdown(f"""
         font-size: 12px !important;
     }}
 
-    /* ===== View switcher: turn st.radio into a premium pill toggle, ===== */
-    /* ===== not the default Streamlit radio look.                    ===== */
-    .st-key-view_selector div[role="radiogroup"] {{
-        display: inline-flex;
-        gap: 4px;
+    /* ===== View switcher: st.segmented_control base styling.  ===== */
+    /* ===== The active-pill highlight is injected separately,  ===== */
+    /* ===== computed in Python from the known selection index  ===== */
+    /* ===== rather than guessed from Streamlit's internal ARIA ===== */
+    /* ===== attributes - see the small <style> block right     ===== */
+    /* ===== after the widget is created.                       ===== */
+    @keyframes viewSwitchSnap {{
+        0% {{ transform: scale(0.94); }}
+        60% {{ transform: scale(1.02); }}
+        100% {{ transform: scale(1); }}
+    }}
+
+    @keyframes panelFadeIn {{
+        from {{ opacity: 0; transform: translateY(10px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    .st-key-view_selector [data-testid="stSegmentedControl"] {{
         background-color: {THEME["surface_alt"]};
         border: 1px solid {THEME["border"]};
         border-radius: 999px;
         padding: 4px;
+        gap: 4px;
     }}
 
-    .st-key-view_selector label {{
-        margin: 0 !important;
-        cursor: pointer;
-    }}
-
-    /* Hide the default circular radio indicator */
-    .st-key-view_selector label > div:first-child {{
-        display: none !important;
-    }}
-
-    /* Style the option text as a pill button */
-    .st-key-view_selector label > div:last-child {{
-        padding: 10px 22px !important;
+    .st-key-view_selector button {{
+        border: none !important;
+        background-color: transparent !important;
         border-radius: 999px !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-weight: 700 !important;
         font-size: 14px !important;
+        padding: 10px 22px !important;
         color: {THEME["muted"]} !important;
         white-space: nowrap;
-        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
     }}
 
-    .st-key-view_selector label:hover > div:last-child {{
+    .st-key-view_selector button:hover {{
         color: {THEME["text"]} !important;
-    }}
-
-    /* Selected pill - highlighted in the same accent as the primary buttons */
-    .st-key-view_selector label:has(input:checked) > div:last-child {{
-        background-color: {THEME["accent"]} !important;
-        color: {THEME["accent_text"]} !important;
-        box-shadow: {THEME["button_shadow"]};
+        transform: translateY(-1px);
     }}
 
     /* ===== Card panels wrapping each view / the expiry test ===== */
@@ -279,6 +260,7 @@ st.markdown(f"""
         border-radius: 18px !important;
         box-shadow: {THEME["card_shadow"]};
         padding: 1.75rem !important;
+        animation: panelFadeIn 0.35s ease;
     }}
 
     .st-key-expiry_panel {{
@@ -290,18 +272,37 @@ st.markdown(f"""
 st.title("DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
-PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
-BACKEND_URL = "https://thirty-plants-boil.loca.lt"
+PROXY_URL = "https://56d2bcc776805b.lhr.life"
+BACKEND_URL = "https://353bd044ed9e1d.lhr.life"
 
 # --- Switchable View: User View vs Hacker View vs Admin View ---
 st.caption("SWITCH VIEW")
-active_view = st.radio(
+view_options = ["User View", "Hacker View", "Admin View"]
+active_view = st.segmented_control(
     "View",
-    ["User View", "Hacker View", "Admin View"],
-    horizontal=True,
+    view_options,
+    default="User View",
     label_visibility="collapsed",
     key="view_selector",
 )
+if active_view is None:
+    # Single-select segmented_control can be clicked off; fall back to User View
+    active_view = "User View"
+
+# Highlight the active pill by its position (1-indexed for nth-of-type), computed
+# here in Python from the known selection - not guessed from Streamlit's internal
+# ARIA/state attributes, which aren't reliably inspectable ahead of time.
+_active_index = view_options.index(active_view) + 1
+st.markdown(f"""
+    <style>
+    .st-key-view_selector button:nth-of-type({_active_index}) {{
+        background-color: {THEME["accent"]} !important;
+        color: {THEME["accent_text"]} !important;
+        box-shadow: {THEME["button_shadow"]};
+        animation: viewSwitchSnap 0.25s ease;
+    }}
+    </style>
+""", unsafe_allow_html=True)
 
 with st.container(border=True, key="view_panel"):
     if active_view == "User View":
