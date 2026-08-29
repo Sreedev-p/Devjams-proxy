@@ -73,17 +73,62 @@ else:
         "role_admin_shadow": "none",
     }
 
+# --- DARK-MODE BACKGROUND IMAGE ---
+# Grey field with two parallel diagonal stripes (top-left -> bottom-right).
+# Only used in dark mode; light mode keeps the existing flat color + dot grid.
+DIAGONAL_BG_PATH = "diagonal-dark.png"
+
+
+@st.cache_data
+def get_base64_image(image_path):
+    path = Path(image_path)
+    if not path.exists():
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+diagonal_bg_base64 = get_base64_image(DIAGONAL_BG_PATH) if dark_mode else None
+
+if diagonal_bg_base64:
+    app_bg_css = f"""
+        background-image: url("data:image/png;base64,{diagonal_bg_base64}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    """
+    app_bg_overlay_css = f"""
+        [data-testid="stAppViewContainer"]::before {{
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.25);
+            z-index: 0;
+            pointer-events: none;
+        }}
+    """
+else:
+    # Fallback: flat color + dot grid (used in light mode, and in dark mode too
+    # if diagonal-dark.png hasn't been placed next to app.py yet)
+    app_bg_css = f"""
+        background-color: {THEME["bg"]};
+        background-image: radial-gradient(circle, {THEME["dot"]} 1px, transparent 1px);
+        background-size: 22px 22px;
+    """
+    app_bg_overlay_css = ""
+
 # --- CUSTOM THEME (CSS INJECTION) - "TEAK-STYLE" REDESIGN, LIGHT + DARK ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-    /* Background with subtle dot grid, like the reference site (both themes) */
+    /* Background: diagonal image in dark mode (falls back to flat color + dot grid) */
     [data-testid="stAppViewContainer"] {{
-        background-color: {THEME["bg"]};
-        background-image: radial-gradient(circle, {THEME["dot"]} 1px, transparent 1px);
-        background-size: 22px 22px;
+        {app_bg_css}
     }}
+
+    {app_bg_overlay_css}
 
     [data-testid="stAppViewContainer"] > .main {{
         position: relative;
@@ -440,7 +485,7 @@ with st.container(border=True, key="view_panel"):
 
         refresh_col, _ = st.columns([1, 4])
         with refresh_col:
-            fetch_logs = st.button("🔄 Refresh Logs")
+            fetch_logs = st.button("Refresh Logs")
 
         if fetch_logs:
             if not soc_admin_key:
