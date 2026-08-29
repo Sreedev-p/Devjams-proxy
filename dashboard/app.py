@@ -8,18 +8,38 @@ st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 # --- CUSTOM THEME (CSS INJECTION) ---
 st.markdown("""
     <style>
+    /* Import 'Inter' from Google Fonts for a premium, professional look */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
     /* Force background to pure black */
     [data-testid="stAppViewContainer"] {
         background-color: #000000;
     }
-    /* Make the top header transparent so it doesn't clash */
+    
+    /* Make the top header transparent */
     [data-testid="stHeader"] {
         background-color: rgba(0, 0, 0, 0);
     }
-    /* Apply a clean, professional enterprise font to all elements */
-    * {
-        font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    
+    /* Apply the professional font and bump up the base size for presentations */
+    html, body, [class*="css"], [class*="st-"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 18px !important; 
     }
+    
+    /* Make headers sharper and slightly bolder */
+    h1, h2, h3, h4 {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.5px;
+    }
+    
+    /* Ensure input fields and dropdowns match the new font and size */
+    .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+        font-size: 16px !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    
     /* Slightly darken the alert boxes so they look good on pure black */
     div[data-testid="stAlert"] {
         background-color: #111111;
