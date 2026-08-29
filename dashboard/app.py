@@ -161,6 +161,23 @@ st.markdown(f"""
         box-shadow: {THEME["card_shadow"]};
         padding: 1.75rem !important;
     }}
+
+    /* "+" add-field button — ghost/dashed style so it reads as a small
+       inline control rather than a full primary action button. */
+    .st-key-add_field_btn button {{
+        background-color: transparent !important;
+        color: {THEME["accent_active"] if not dark_mode else THEME["accent"]} !important;
+        border: 1px dashed {THEME["border"]} !important;
+        box-shadow: none !important;
+        width: auto;
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }}
+
+    .st-key-add_field_btn button:hover {{
+        border-color: {THEME["accent"]} !important;
+        background-color: {THEME["surface_alt"]} !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -237,28 +254,28 @@ with st.container(border=True, key="view_panel"):
                     st.error(f"Failed to read database. Status Code: {db_res.status_code}")
             except requests.exceptions.ConnectionError:
                 st.warning("Target backend (port 5000) is not running.")
-                
+
     elif active_view == "📊 SOC Dashboard":
         st.subheader("📊 Security Operations Center (SIEM)")
         st.caption("Live immutable audit trail of all cryptographic proxy events.")
-        
+
         soc_key = st.text_input("Admin API Key", type="password", key="soc_admin_key")
-        
+
         if st.button("Fetch Live Telemetry"):
             try:
                 headers = {"X-Admin-Key": soc_key, **TUNNEL_HEADERS}
                 res = requests.get(f"{PROXY_URL}/api/admin/logs", headers=headers)
-                
+
                 if res.status_code == 200:
                     data = res.json()
                     summary = data.get("summary", {})
                     logs = data.get("logs", [])
-                    
+
                     col1, col2, col3 = st.columns(3)
                     col1.metric("Active Encrypted Keys", summary.get("active_keys", 0))
                     col2.metric("Shredded Keys (Expired)", summary.get("shredded_keys", 0))
                     col3.metric("Decryption Attempts", summary.get("decryption_attempts", 0))
-                    
+
                     st.divider()
                     st.write("### 📜 Immutable Event Ledger")
                     if logs:
@@ -276,8 +293,74 @@ with st.container(border=True, key="view_panel"):
         st.subheader("⚙️ Enterprise DLP Config")
         st.caption("Configure which JSON fields the proxy encrypts on the fly.")
 
-        admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
-        target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
+        # Admin key box no longer stretches the full panel width — a
+        # password/key field doesn't need that much horizontal space.
+        key_col, _spacer = st.columns([1, 1])
+        with key_col:
+            admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
+
+        # --- Dynamic "Fields to Encrypt" list, replaces the old single ---
+        # --- comma-separated text input with a proper +/- add/remove UI. ---
+        # Fields are packed two-per-row so the leftover horizontal space is
+        # used for the next field instead of sitting empty. If a row ends
+        # up with only one field (an odd field out), the "＋ Add Field"
+        # control is placed in that row's free slot instead of on its own
+        # near-empty row below.
+        st.caption("Fields to Encrypt")
+
+        if "encrypt_fields" not in st.session_state:
+            st.session_state.encrypt_fields = ["sensitive_data"]
+
+        fields_to_remove = None
+        field_list = st.session_state.encrypt_fields
+        add_button_placed = False
+        for row_start in range(0, len(field_list), 2):
+            row_has_pair = (row_start + 1) < len(field_list)
+            row_cols = st.columns([3, 1, 3, 1])
+            for offset in range(2):
+                idx = row_start + offset
+                if idx >= len(field_list):
+                    break
+                field_col = row_cols[offset * 2]
+                remove_col = row_cols[offset * 2 + 1]
+                with field_col:
+                    field_list[idx] = st.text_input(
+                        f"Field {idx + 1}",
+                        value=field_list[idx],
+                        key=f"encrypt_field_{idx}",
+                        label_visibility="collapsed",
+                        placeholder="e.g. sensitive_data",
+                    )
+                with remove_col:
+                    # Only offer removal if more than one field remains, so
+                    # the list can never be emptied down to zero rows.
+                    if len(field_list) > 1:
+                        if st.button("✕", key=f"remove_field_{idx}"):
+                            fields_to_remove = idx
+
+            if not row_has_pair:
+                # This row only had one field — use its free half for the
+                # Add Field control rather than leaving it blank.
+                with row_cols[2]:
+                    if st.button("＋ Add Field", key="add_field_btn"):
+                        st.session_state.encrypt_fields.append("")
+                        st.rerun()
+                add_button_placed = True
+
+        if fields_to_remove is not None:
+            st.session_state.encrypt_fields.pop(fields_to_remove)
+            st.rerun()
+
+        if not add_button_placed:
+            if st.button("＋ Add Field", key="add_field_btn"):
+                st.session_state.encrypt_fields.append("")
+                st.rerun()
+
+        # Build the comma-separated string the backend API expects, from
+        # whatever non-empty fields the user has added via the UI above.
+        target_fields = ",".join(
+            f.strip() for f in st.session_state.encrypt_fields if f.strip()
+        )
 
         if st.button("Apply Security Policies"):
             headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
@@ -333,10 +416,10 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
         remaining = int(st.session_state["expiry_time"] - time.time())
 
         if remaining > 0:
-            if remaining <= 60: 
+            if remaining <= 60:
                 timer_placeholder.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
                 time.sleep(1)
-                st.rerun() 
+                st.rerun()
             else:
                 timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
         else:
