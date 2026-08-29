@@ -7,9 +7,16 @@ from pathlib import Path
 # --- Configuration ---
 st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 
-# --- BACKGROUND IMAGE (base64 embed so it works local or deployed) ---
+PROXY_URL = "https://6e3319dd2e30ff.lhr.life"
+BACKEND_URL = "https://bd2dfb593379b0.lhr.life"
 BG_IMAGE_PATH = "cyber-background-8k.png"
+REQUEST_TIMEOUT = (3.05, 15)
 
+# --- Session State ---
+st.session_state.setdefault("last_record_id", None)
+st.session_state.setdefault("expiry_time", None)
+
+# --- BACKGROUND IMAGE (base64 embed so it works local or deployed) ---
 @st.cache_data
 def get_base64_image(image_path):
     path = Path(image_path)
@@ -21,28 +28,26 @@ def get_base64_image(image_path):
 bg_base64 = get_base64_image(BG_IMAGE_PATH)
 
 if bg_base64:
-    bg_css = f"""
-        background-image: url("data:image/png;base64,{bg_base64}");
+    bg_css = '''
+        background-image: url("data:image/png;base64,''' + bg_base64 + '''");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         background-attachment: fixed;
-    """
+    '''
 else:
     bg_css = "background-color: #050505;"
 
-# --- CUSTOM THEME (CSS INJECTION) - PREMIUM SAAS UPDATE ---
-st.markdown(f"""
+# --- CUSTOM THEME (CSS INJECTION) - SAFE STRING FORMATTING ---
+custom_css = """
     <style>
-    /* Premium Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
-    [data-testid="stAppViewContainer"] {{
-        {bg_css}
-    }}
+    [data-testid="stAppViewContainer"] {
+        """ + bg_css + """
+    }
 
-    /* Heavy dark overlay to make it look premium SaaS while keeping your image logic */
-    [data-testid="stAppViewContainer"]::before {{
+    [data-testid="stAppViewContainer"]::before {
         content: "";
         position: fixed;
         top: 0;
@@ -52,73 +57,74 @@ st.markdown(f"""
         background-color: rgba(5, 5, 5, 0.95);
         z-index: 0;
         pointer-events: none;
-    }}
+    }
 
-    [data-testid="stAppViewContainer"] > .main {{
+    [data-testid="stAppViewContainer"] > .main {
         position: relative;
         z-index: 1;
-    }}
+    }
 
-    [data-testid="stHeader"] {{
+    [data-testid="stHeader"] {
         background-color: rgba(0, 0, 0, 0);
-    }}
+    }
 
-    /* Global font sizing - Inter */
-    .stApp {{
+    .stApp, p, span, label, div {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-size: 15px !important;
         letter-spacing: -0.1px;
-    }}
+    }
 
-    /* Headings - Playfair Display */
-    .stApp h1 {{
+    .stApp h1 {
         font-family: 'Playfair Display', serif !important;
         font-weight: 500 !important;
         color: #ffffff !important;
         letter-spacing: -0.5px;
         font-size: 2.8rem !important;
         margin-bottom: 1.5rem !important;
-    }}
+    }
 
-    .stApp h2 {{
+    .stApp h2 {
         font-family: 'Playfair Display', serif !important;
         font-weight: 500 !important;
         color: #ffffff !important;
         letter-spacing: -0.5px;
         font-size: 1.75rem !important;
         margin-bottom: 1rem !important;
-    }}
+    }
 
-    .stApp h3 {{
+    .stApp h3 {
         font-family: 'Playfair Display', serif !important;
         font-weight: 500 !important;
         color: #ffffff !important;
         letter-spacing: -0.5px;
         font-size: 1.25rem !important;
-    }}
+    }
 
-    /* Input fields */
-    .stTextInput input {{
+    .stTextInput input {
         background-color: #0a0a0a !important;
         border: 1px solid #2a2a2a !important;
         color: #ffffff !important;
         border-radius: 6px !important;
         font-family: 'Inter', sans-serif !important;
-        padding: 10px 12px !important;
+        padding: 12px 16px !important;
         font-size: 14px !important;
-    }}
+        transition: border-color 0.2s ease;
+    }
 
-    .stSelectbox div[data-baseweb="select"] {{
+    .stTextInput input:focus {
+        border-color: #ffffff !important;
+    }
+
+    .stSelectbox div[data-baseweb="select"] {
         background-color: #0a0a0a !important;
         border: 1px solid #2a2a2a !important;
         color: #ffffff !important;
         border-radius: 6px !important;
         font-family: 'Inter', sans-serif !important;
         font-size: 14px !important;
-    }}
+    }
 
-    /* Buttons - Premium White Pill Style */
-    .stButton button {{
+    .stButton button {
         background-color: #ffffff !important;
         color: #000000 !important;
         border-radius: 50px !important;
@@ -127,72 +133,101 @@ st.markdown(f"""
         font-weight: 500 !important;
         font-size: 14px !important;
         padding: 10px 24px !important;
-    }}
+        transition: all 0.2s ease !important;
+    }
 
-    /* Alerts & Messages */
-    div[data-testid="stAlert"] {{
+    .stButton button:hover {
+        background-color: #e0e0e0 !important;
+        transform: translateY(-1px);
+    }
+
+    div[data-testid="stAlert"] {
         background-color: #0a0a0a !important;
         border: 1px solid #222222 !important;
         border-radius: 6px !important;
+        color: #d1d1d1 !important;
         padding: 16px !important;
         font-size: 14px !important;
-        color: #d1d1d1 !important;
-    }}
+    }
 
-    /* Sidebar specific */
-    [data-testid="stSidebar"] {{
+    [data-testid="stSidebar"] {
         background-color: #050505 !important;
         border-right: 1px solid #1a1a1a !important;
-    }}
+    }
 
-    [data-testid="stSidebar"] .stTextInput input {{
+    [data-testid="stSidebar"] .stTextInput input {
         font-size: 13px !important;
-    }}
+    }
 
-    [data-testid="stSidebar"] .stMarkdownContainer {{
+    [data-testid="stSidebar"] .stMarkdownContainer {
         font-size: 14px !important;
-    }}
+    }
 
-    [data-testid="stSidebar"] h2 {{
+    [data-testid="stSidebar"] h2 {
         font-size: 1.5rem !important;
-    }}
+    }
 
-    /* Divider */
-    hr {{
+    hr {
         border-color: #222222 !important;
-        margin: 2rem 0 !important;
-    }}
+        margin: 3rem 0 !important;
+    }
 
-    /* JSON display */
-    .stJson {{
+    .stJson {
         font-size: 13px !important;
-    }}
-    
-    /* Tab Styling */
-    .stTabs [data-baseweb="tab-list"] button {{
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: transparent !important;
+        border-bottom: 1px solid #222222 !important;
+        gap: 2rem;
+    }
+
+    .stTabs [data-baseweb="tab"] {
         font-family: 'Inter', sans-serif !important;
-        font-size: 16px !important;
         color: #777777 !important;
-    }}
-    
-    .stTabs [aria-selected="true"] {{
+        font-weight: 400 !important;
+        padding-bottom: 12px !important;
+        border-bottom: 2px solid transparent !important;
+    }
+
+    .stTabs [aria-selected="true"] {
         color: #ffffff !important;
-        border-bottom-color: #ffffff !important;
-    }}
+        border-bottom: 2px solid #ffffff !important;
+        font-weight: 500 !important;
+    }
     </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
 
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
-PROXY_URL = "https://6e3319dd2e30ff.lhr.life"
-BACKEND_URL = "https://bd2dfb593379b0.lhr.life"
-
-# BYPASS HEADERS to prevent Localtunnel HTML warning screens from crashing the JSON parser
+# BYPASS HEADERS to prevent Localtunnel / ngrok warning HTML from breaking JSON parsing
 TUNNEL_HEADERS = {
     "Bypass-Tunnel-Reminder": "true",
     "ngrok-skip-browser-warning": "true",
     "User-Agent": "DataExpiry-App/1.0"
 }
+
+@st.fragment(run_every="1s")
+def render_countdown():
+    if not st.session_state.get("expiry_time"):
+        return
+
+    remaining = max(0, int(st.session_state["expiry_time"] - time.time()))
+
+    if remaining > 0:
+        if remaining <= 60:
+            st.warning(
+                f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding..."
+            )
+        else:
+            st.warning(
+                f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding..."
+            )
+    else:
+        st.error(
+            "🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault."
+        )
 
 # =========================================================
 # SIDEBAR: Enterprise DLP Admin Config Panel
@@ -200,17 +235,28 @@ TUNNEL_HEADERS = {
 with st.sidebar:
     st.header("⚙️ Enterprise DLP Config")
 
-    st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
+    st.caption(
+        "Configure which JSON fields the proxy encrypts on the fly. "
+        "Changes are saved permanently in the SQLite vault and apply immediately, no restart needed."
+    )
 
     admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
-    target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
+    target_fields = st.text_input(
+        "Fields to Encrypt (comma-separated)",
+        "sensitive_data",
+        key="target_fields_input"
+    )
 
     if st.button("Apply Security Policies"):
-        # Merges the admin key with the tunnel bypass headers
         headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
         payload = {"fields": target_fields}
         try:
-            res = requests.post(f"{PROXY_URL}/api/admin/config", json=payload, headers=headers)
+            res = requests.post(
+                f"{PROXY_URL}/api/admin/config",
+                json=payload,
+                headers=headers,
+                timeout=REQUEST_TIMEOUT
+            )
             if res.status_code in [200, 201]:
                 st.success(f"Active fields: {res.json().get('active_fields')}")
             elif res.status_code == 401:
@@ -219,18 +265,30 @@ with st.sidebar:
                 st.error(f"Unexpected error: {res.status_code} - {res.text}")
         except requests.exceptions.ConnectionError:
             st.error("Cannot reach proxy — is it running?")
+        except requests.exceptions.Timeout:
+            st.error("Proxy request timed out.")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Request failed: {e}")
 
     st.divider()
 
     if st.button("🔄 View Current Active Fields"):
         try:
-            cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", headers=TUNNEL_HEADERS)
+            cfg_res = requests.get(
+                f"{PROXY_URL}/api/admin/config",
+                headers=TUNNEL_HEADERS,
+                timeout=REQUEST_TIMEOUT
+            )
             if cfg_res.status_code == 200:
                 st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
             else:
                 st.warning(f"Could not fetch config: {cfg_res.status_code}")
         except requests.exceptions.ConnectionError:
             st.warning("Proxy unreachable.")
+        except requests.exceptions.Timeout:
+            st.warning("Proxy request timed out.")
+        except requests.exceptions.RequestException as e:
+            st.warning(f"Request failed: {e}")
 
 # =========================================================
 # MAIN UI: Tabbed Views
@@ -250,7 +308,10 @@ with tab1:
         "30 Days (Standard Compliance)": 2592000,
         "1 Year (Enterprise Archival)": 31536000
     }
-    selected_ttl = st.selectbox("Data Retention Policy (Time-To-Live)", list(ttl_options.keys()))
+    selected_ttl = st.selectbox(
+        "Data Retention Policy (Time-To-Live)",
+        list(ttl_options.keys())
+    )
     ttl = ttl_options[selected_ttl]
 
     if st.button("Submit Sensitive Data"):
@@ -260,7 +321,12 @@ with tab1:
             "ttl_seconds": ttl
         }
         try:
-            res = requests.post(f"{PROXY_URL}/api/records", json=payload, headers=TUNNEL_HEADERS)
+            res = requests.post(
+                f"{PROXY_URL}/api/records",
+                json=payload,
+                headers=TUNNEL_HEADERS,
+                timeout=REQUEST_TIMEOUT
+            )
             if res.status_code in [200, 201]:
                 st.session_state["last_record_id"] = res.json().get("id")
                 st.session_state["expiry_time"] = time.time() + ttl
@@ -268,7 +334,11 @@ with tab1:
             else:
                 st.error(f"Proxy Error: {res.status_code} - {res.text}")
         except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
+            st.error("Cannot connect to Proxy!")
+        except requests.exceptions.Timeout:
+            st.error("Proxy request timed out.")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Request failed: {e}")
 
 with tab2:
     st.subheader("Target Database Contents")
@@ -276,7 +346,11 @@ with tab2:
 
     if st.button("Refresh Database View"):
         try:
-            db_res = requests.get(f"{BACKEND_URL}/api/records", headers=TUNNEL_HEADERS)
+            db_res = requests.get(
+                f"{BACKEND_URL}/api/records",
+                headers=TUNNEL_HEADERS,
+                timeout=REQUEST_TIMEOUT
+            )
             if db_res.status_code == 200:
                 records = db_res.json()
                 if records:
@@ -286,48 +360,47 @@ with tab2:
             else:
                 st.error("Failed to read database.")
         except requests.exceptions.ConnectionError:
-            st.warning("Target backend (port 5000) is not running.")
+            st.warning("Target backend is not reachable.")
+        except requests.exceptions.Timeout:
+            st.warning("Target backend request timed out.")
+        except requests.exceptions.RequestException as e:
+            st.warning(f"Request failed: {e}")
 
 st.divider()
 
 # --- Live Expiry & Retrieval Demo ---
-if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
+if st.session_state.get("expiry_time") and st.session_state.get("last_record_id"):
     st.subheader("⏱️ Live Expiry & Retrieval Test")
 
-    # 1. Create the placeholder FIRST so it renders above the buttons
-    timer_placeholder = st.empty()
-
-    # 2. Render the Action Button (visible and clickable while timer runs)
     if st.button("Attempt Decrypted Read via Proxy"):
         rec_id = st.session_state["last_record_id"]
         try:
-            fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
+            fetch_res = requests.get(
+                f"{PROXY_URL}/api/records/{rec_id}",
+                headers=TUNNEL_HEADERS,
+                timeout=REQUEST_TIMEOUT
+            )
 
             if fetch_res.status_code == 200:
                 st.success("200 OK: Key active. Decrypted plaintext restored.")
                 st.json(fetch_res.json())
             elif fetch_res.status_code == 410:
                 st.error("410 Gone: Decryption key permanently erased from Vault.")
-                st.json(fetch_res.json())
+                try:
+                    st.json(fetch_res.json())
+                except Exception:
+                    st.code(fetch_res.text)
             else:
                 st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
+                try:
+                    st.json(fetch_res.json())
+                except Exception:
+                    st.code(fetch_res.text)
         except requests.exceptions.ConnectionError:
             st.error("Cannot connect to Proxy for retrieval.")
+        except requests.exceptions.Timeout:
+            st.error("Proxy retrieval request timed out.")
+        except requests.exceptions.RequestException as e:
+            st.error(f"Request failed: {e}")
 
-    # 3. Execute the Live Countdown Loop at the absolute bottom of the script
-    remaining = int(st.session_state["expiry_time"] - time.time())
-
-    if remaining > 0:
-        if remaining <= 60: 
-            # Live ticking animation for short demo durations
-            while remaining > 0:
-                timer_placeholder.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
-                time.sleep(1)
-                remaining = int(st.session_state["expiry_time"] - time.time())
-            
-            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
-        else:
-            # Static view for long TTLs to prevent infinite loop locking
-            timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
-    else:
-        timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+    render_countdown()
