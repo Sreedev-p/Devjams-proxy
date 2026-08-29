@@ -7,161 +7,218 @@ from pathlib import Path
 # --- Configuration ---
 st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 
-# --- CUSTOM THEME (CSS INJECTION) - LIGHT "TEAK-STYLE" REDESIGN ---
-st.markdown("""
+# --- THEME DETECTION ---
+# Streamlit already ships a native Light/Dark/System switcher (the "..." menu -> Settings).
+# We read the currently active theme from it instead of adding a second, redundant toggle.
+try:
+    dark_mode = st.context.theme.type == "dark"
+except Exception:
+    # Older Streamlit versions without st.context.theme -> default to light styling
+    dark_mode = False
+
+# --- Color tokens for each theme, matching the light/dark pair in the reference site ---
+if dark_mode:
+    THEME = {
+        "bg": "#0B0B09",
+        "dot": "rgba(255, 255, 255, 0.055)",
+        "text": "#F3F2EC",
+        "muted": "#A6A497",
+        "surface": "#151512",
+        "surface_alt": "#1B1B17",
+        "border": "#2C2B24",
+        "sidebar_bg": "#101210",
+        "accent": "#F5D033",
+        "accent_hover": "#FFDE66",
+        "accent_active": "#E0BC24",
+        "accent_text": "#14140F",
+        "button_shadow": "0 0 0 1px rgba(245, 208, 51, 0.12), 0 6px 20px rgba(245, 208, 51, 0.16)",
+        "button_shadow_hover": "0 0 0 1px rgba(245, 208, 51, 0.2), 0 8px 26px rgba(245, 208, 51, 0.26)",
+        "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.35)",
+    }
+else:
+    THEME = {
+        "bg": "#FAFAF7",
+        "dot": "#E6E4DE",
+        "text": "#14140F",
+        "muted": "#6B6A63",
+        "surface": "#FFFFFF",
+        "surface_alt": "#F4F3EE",
+        "border": "#E2E0D9",
+        "sidebar_bg": "#FFFFFF",
+        "accent": "#F5D033",
+        "accent_hover": "#E8C11F",
+        "accent_active": "#D9B310",
+        "accent_text": "#14140F",
+        "button_shadow": "none",
+        "button_shadow_hover": "none",
+        "card_shadow": "0 1px 2px rgba(20, 20, 15, 0.04)",
+    }
+
+# --- CUSTOM THEME (CSS INJECTION) - "TEAK-STYLE" REDESIGN, LIGHT + DARK ---
+st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-    /* Light off-white background with subtle dot grid, like the reference site */
-    [data-testid="stAppViewContainer"] {
-        background-color: #FAFAF7;
-        background-image: radial-gradient(circle, #E6E4DE 1px, transparent 1px);
+    /* Background with subtle dot grid, like the reference site (both themes) */
+    [data-testid="stAppViewContainer"] {{
+        background-color: {THEME["bg"]};
+        background-image: radial-gradient(circle, {THEME["dot"]} 1px, transparent 1px);
         background-size: 22px 22px;
-    }
+    }}
 
-    [data-testid="stAppViewContainer"] > .main {
+    [data-testid="stAppViewContainer"] > .main {{
         position: relative;
         z-index: 1;
-    }
+    }}
 
-    [data-testid="stHeader"] {
+    [data-testid="stHeader"] {{
         background-color: rgba(0, 0, 0, 0);
-    }
+    }}
 
     /* Global font sizing */
-    .stApp {
+    .stApp {{
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-size: 16px !important;
         letter-spacing: -0.1px;
-        color: #14140F !important;
-    }
+        color: {THEME["text"]} !important;
+    }}
 
-    .stApp h1 {
+    .stApp h1 {{
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-weight: 800 !important;
         letter-spacing: -1.4px;
         font-size: 2.75rem !important;
         margin-bottom: 1.5rem !important;
-        color: #14140F !important;
-    }
+        color: {THEME["text"]} !important;
+    }}
 
-    .stApp h2 {
+    .stApp h2 {{
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-weight: 700 !important;
         letter-spacing: -0.9px;
         font-size: 1.75rem !important;
         margin-bottom: 1rem !important;
-        color: #14140F !important;
-    }
+        color: {THEME["text"]} !important;
+    }}
 
-    .stApp h3 {
+    .stApp h3 {{
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-weight: 700 !important;
         letter-spacing: -0.5px;
         font-size: 1.25rem !important;
-        color: #14140F !important;
-    }
+        color: {THEME["text"]} !important;
+    }}
 
     /* Input fields */
-    .stTextInput input {
+    .stTextInput input {{
         font-size: 14px !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         padding: 10px 12px !important;
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E0D9 !important;
+        background-color: {THEME["surface"]} !important;
+        border: 1px solid {THEME["border"]} !important;
         border-radius: 8px !important;
-        color: #14140F !important;
-    }
+        color: {THEME["text"]} !important;
+        box-shadow: {THEME["card_shadow"]};
+        transition: border-color 0.15s ease;
+    }}
 
-    .stSelectbox {
+    .stTextInput input:focus {{
+        border-color: {THEME["accent"]} !important;
+    }}
+
+    .stSelectbox {{
         font-size: 14px !important;
-    }
+    }}
 
-    .stSelectbox > div > div {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E0D9 !important;
+    .stSelectbox > div > div {{
+        background-color: {THEME["surface"]} !important;
+        border: 1px solid {THEME["border"]} !important;
         border-radius: 8px !important;
-    }
+        color: {THEME["text"]} !important;
+    }}
 
     /* Buttons - yellow pill, like the reference "Book a demo" button */
-    .stButton button {
+    .stButton button {{
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-weight: 700 !important;
         letter-spacing: -0.2px;
         font-size: 14px !important;
         padding: 10px 20px !important;
-        background-color: #F5D033 !important;
-        color: #14140F !important;
+        background-color: {THEME["accent"]} !important;
+        color: {THEME["accent_text"]} !important;
         border: none !important;
         border-radius: 999px !important;
-        box-shadow: none !important;
-        transition: transform 0.15s ease, background-color 0.15s ease;
-    }
+        box-shadow: {THEME["button_shadow"]};
+        transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }}
 
-    .stButton button:hover {
-        background-color: #E8C11F !important;
-        color: #14140F !important;
+    .stButton button:hover {{
+        background-color: {THEME["accent_hover"]} !important;
+        color: {THEME["accent_text"]} !important;
+        box-shadow: {THEME["button_shadow_hover"]};
         transform: translateY(-1px);
-    }
+    }}
 
-    .stButton button:active {
-        background-color: #D9B310 !important;
-    }
+    .stButton button:active {{
+        background-color: {THEME["accent_active"]} !important;
+    }}
 
     /* Alerts & Messages */
-    div[data-testid="stAlert"] {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E0D9;
+    div[data-testid="stAlert"] {{
+        background-color: {THEME["surface"]};
+        border: 1px solid {THEME["border"]};
         border-radius: 10px;
         padding: 16px !important;
         font-size: 14px !important;
-        color: #14140F !important;
-    }
+        color: {THEME["text"]} !important;
+        box-shadow: {THEME["card_shadow"]};
+    }}
 
     /* Sidebar specific */
-    [data-testid="stSidebar"] {
-        background-color: #FFFFFF;
-        border-right: 1px solid #E2E0D9;
-    }
+    [data-testid="stSidebar"] {{
+        background-color: {THEME["sidebar_bg"]};
+        border-right: 1px solid {THEME["border"]};
+    }}
 
-    [data-testid="stSidebar"] .stTextInput input {
+    [data-testid="stSidebar"] .stTextInput input {{
         font-size: 13px !important;
-    }
+    }}
 
-    [data-testid="stSidebar"] .stMarkdownContainer {
+    [data-testid="stSidebar"] .stMarkdownContainer {{
         font-size: 14px !important;
-        color: #14140F !important;
-    }
+        color: {THEME["text"]} !important;
+    }}
 
-    [data-testid="stSidebar"] h2 {
+    [data-testid="stSidebar"] h2 {{
         font-size: 1.5rem !important;
-    }
+    }}
 
     /* Divider */
-    hr {
+    hr {{
         margin: 2rem 0 !important;
-        border-color: #E2E0D9 !important;
-    }
+        border-color: {THEME["border"]} !important;
+    }}
 
     /* JSON display - monospace, matches the technical look of the reference site */
-    .stJson {
+    .stJson {{
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 13px !important;
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E0D9 !important;
+        background-color: {THEME["surface_alt"]} !important;
+        border: 1px solid {THEME["border"]} !important;
         border-radius: 8px !important;
-    }
+        box-shadow: {THEME["card_shadow"]};
+    }}
 
     /* Cards for columns (subheaders act as section headers) */
-    .stColumn {
+    .stColumn {{
         background-color: transparent;
-    }
+    }}
 
     /* Captions - monospace, mirrors the small stat labels ("30%+ Higher CTR") in the reference */
-    .stCaption, [data-testid="stCaptionContainer"] {
+    .stCaption, [data-testid="stCaptionContainer"] {{
         font-family: 'JetBrains Mono', monospace !important;
-        color: #6B6A63 !important;
-    }
+        color: {THEME["muted"]} !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
