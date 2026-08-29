@@ -265,26 +265,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 st.title("DataExpiry: Zero-Code Cryptographic Erasure")
-# --- CUSTOM SVG LOGO ---
-logo_svg = """
-<svg width="300" height="50" viewBox="0 0 300 50" xmlns="http://www.w3.org/2000/svg">
-    <!-- Cryptographic Shield / Hourglass Icon -->
-    <g transform="translate(0, 5)">
-        <path d="M20 0 L40 8 L40 22 C40 32 30 40 20 45 C10 40 0 32 0 22 L0 8 Z" fill="none" stroke="#F5D033" stroke-width="3"/>
-        <circle cx="20" cy="20" r="5" fill="#F5D033"/>
-        <line x1="20" y1="25" x2="20" y2="35" stroke="#FF4D5E" stroke-width="2" stroke-dasharray="2 2"/>
-    </g>
-    <!-- Brand Name -->
-    <text x="55" y="35" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="28" fill="#F3F2EC" letter-spacing="-1px">
-        Data<tspan fill="#F5D033">Expiry</tspan>
-    </text>
-</svg>
-"""
-
-st.markdown(f'<div style="margin-bottom: 20px;">{logo_svg}</div>', unsafe_allow_html=True)
-
-#//////////////////////
-
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
 BACKEND_URL = "https://thirty-plants-boil.loca.lt"
 
