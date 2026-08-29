@@ -5,26 +5,30 @@ import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, Request, HTTPException, Response, Header, Depends
 import httpx
+from fastapi import FastAPI, Request, HTTPException, Response, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 import vault
 import crypto_engine
 from reaper import run_reaper
 
+# =========================================================
+# CONFIG
+# =========================================================
 TARGET_BACKEND = os.getenv("TARGET_BACKEND", "http://localhost:5000")
 DEFAULT_TARGET_FIELDS = {"sensitive_data"}
 ADMIN_API_KEY = os.getenv("DATAEXPIRY_ADMIN_KEY", "supersecretadmin")
 
-
+# =========================================================
+# APP LIFECYCLE
+# =========================================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     vault.init_db()
     reaper_task = asyncio.create_task(run_reaper(interval_seconds=2))
     yield
     reaper_task.cancel()
-
 
 app = FastAPI(lifespan=lifespan, title="DataExpiry Reverse Proxy")
 
@@ -36,7 +40,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# =========================================================
+# HELPERS
+# =========================================================
 def get_target_fields() -> set[str]:
     fields = vault.get_config()
     return set(fields) if fields else DEFAULT_TARGET_FIELDS
@@ -62,6 +68,7 @@ def process_outgoing_payload(data, ttl_seconds=10):
                 vault.store_key(data_id, enc_dek, dek_nonce, ttl_seconds=ttl_seconds)
 
                 data[k] = f"ENC::{data_id}::{b64_nonce}::{b64_cipher}"
+
             elif isinstance(v, (dict, list)):
                 process_outgoing_payload(v, ttl_seconds)
 
@@ -93,8 +100,15 @@ def process_incoming_payload(data):
                             }
                         )
 
-                    dek = crypto_engine.unwrap_dek(meta["encrypted_dek"], meta["nonce"])
-                    data[k] = crypto_engine.decrypt_payload(b64_cipher, b64_nonce, dek)
+                    dek = crypto_engine.unwrap_dek(
+                        meta["encrypted_dek"],
+                        meta["nonce"]
+                    )
+                    data[k] = crypto_engine.decrypt_payload(
+                        b64_cipher,
+                        b64_nonce,
+                        dek
+                    )
 
             elif isinstance(v, (dict, list)):
                 process_incoming_payload(v)
@@ -105,7 +119,9 @@ def process_incoming_payload(data):
 
     return data
 
-
+# =========================================================
+# ADMIN ENDPOINTS
+# =========================================================
 @app.get("/api/admin/config")
 async def admin_get_config():
     return {"active_fields": vault.get_config()}
@@ -133,7 +149,9 @@ async def admin_get_logs(limit: int = 200):
 async def admin_get_stats():
     return vault.get_audit_summary()
 
-
+# =========================================================
+# MAIN PROXY
+# =========================================================
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy_traffic(request: Request, path: str):
     url = f"{TARGET_BACKEND}/{path}"
