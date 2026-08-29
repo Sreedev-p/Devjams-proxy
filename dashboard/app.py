@@ -16,39 +16,39 @@ except Exception:
 # --- Color tokens ---
 if dark_mode:
     THEME = {
-        "bg": "#1A231D",
-        "dot": "rgba(163, 177, 138, 0.08)",
-        "text": "#DAD7CD",
-        "muted": "#A3B18A",
-        "surface": "#243228",
-        "surface_alt": "#2C3B2F",
-        "border": "#3A5A40",
-        "sidebar_bg": "#1A231D",
-        "accent": "#A3B18A",
-        "accent_hover": "#B7C29E",
-        "accent_active": "#8FA179",
-        "accent_text": "#1A231D",
-        "button_shadow": "0 0 0 1px rgba(163, 177, 138, 0.15), 0 6px 20px rgba(163, 177, 138, 0.15)",
-        "button_shadow_hover": "0 0 0 1px rgba(163, 177, 138, 0.25), 0 8px 26px rgba(163, 177, 138, 0.25)",
+        "bg": "#2A1810",
+        "dot": "rgba(187, 148, 87, 0.08)",
+        "text": "#FFE6A7",
+        "muted": "#BB9457",
+        "surface": "#3A2415",
+        "surface_alt": "#432818",
+        "border": "#5C3A22",
+        "sidebar_bg": "#2A1810",
+        "accent": "#BB9457",
+        "accent_hover": "#CBA96F",
+        "accent_active": "#99582A",
+        "accent_text": "#2A1810",
+        "button_shadow": "0 0 0 1px rgba(187, 148, 87, 0.15), 0 6px 20px rgba(187, 148, 87, 0.15)",
+        "button_shadow_hover": "0 0 0 1px rgba(187, 148, 87, 0.25), 0 8px 26px rgba(187, 148, 87, 0.25)",
         "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.4)",
     }
 else:
     THEME = {
-        "bg": "#F6F5F0",
-        "dot": "#DAD7CD",
-        "text": "#2C3930",
-        "muted": "#6B7566",
+        "bg": "#FDF6E3",
+        "dot": "#EAD9A0",
+        "text": "#432818",
+        "muted": "#8A6A4F",
         "surface": "#FFFFFF",
-        "surface_alt": "#EDEBE2",
-        "border": "#DAD7CD",
+        "surface_alt": "#F7ECC9",
+        "border": "#E6D3A0",
         "sidebar_bg": "#FFFFFF",
-        "accent": "#588157",
-        "accent_hover": "#4A6F49",
-        "accent_active": "#3A5A40",
+        "accent": "#99582A",
+        "accent_hover": "#7E4922",
+        "accent_active": "#6F1D1B",
         "accent_text": "#FFFFFF",
-        "button_shadow": "0 1px 2px rgba(52, 78, 65, 0.08)",
-        "button_shadow_hover": "0 4px 12px rgba(88, 129, 87, 0.25)",
-        "card_shadow": "0 1px 3px rgba(20, 20, 15, 0.06)",
+        "button_shadow": "0 1px 2px rgba(67, 40, 24, 0.08)",
+        "button_shadow_hover": "0 4px 12px rgba(153, 88, 42, 0.25)",
+        "card_shadow": "0 1px 3px rgba(67, 40, 24, 0.06)",
     }
 
 # --- CUSTOM THEME (CSS INJECTION) ---
@@ -181,7 +181,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("DataExpiry: Zero-Code Cryptographic Erasure")
+st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
 BACKEND_URL = "https://thirty-plants-boil.loca.lt"
@@ -197,15 +197,15 @@ TUNNEL_HEADERS = {
 st.caption("SWITCH VIEW")
 active_view = st.radio(
     "View",
-    ["User View", "Hacker View", "Admin View", "SOC Dashboard"],
+    ["👤 User View", "🕵️ Hacker View", "⚙️ Admin View", "📊 SOC Dashboard"],
     horizontal=True,
     label_visibility="collapsed",
     key="view_selector",
 )
 
 with st.container(border=True, key="view_panel"):
-    if active_view == "User View":
-        st.subheader("Client / Application View")
+    if active_view == "👤 User View":
+        st.subheader("👤 Client / Application View")
         user_name = st.text_input("Customer Name", "Alice Smith")
         sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
@@ -237,8 +237,8 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
-    elif active_view == "Hacker View":
-        st.subheader("Hacker View (Target Database)")
+    elif active_view == "🕵️ Hacker View":
+        st.subheader("🕵️ Hacker View (Target Database)")
         st.info("Live peek inside `company_database.db`:")
 
         if st.button("Refresh Database View"):
@@ -255,8 +255,8 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.warning("Target backend (port 5000) is not running.")
 
-    elif active_view == "SOC Dashboard":
-        st.subheader("Security Operations Center (SIEM)")
+    elif active_view == "📊 SOC Dashboard":
+        st.subheader("📊 Security Operations Center (SIEM)")
         st.caption("Live immutable audit trail of all cryptographic proxy events.")
 
         soc_key = st.text_input("Admin API Key", type="password", key="soc_admin_key")
@@ -277,7 +277,7 @@ with st.container(border=True, key="view_panel"):
                     col3.metric("Decryption Attempts", summary.get("decryption_attempts", 0))
 
                     st.divider()
-                    st.write("### Immutable Event Ledger")
+                    st.write("### 📜 Immutable Event Ledger")
                     if logs:
                         st.dataframe(logs, use_container_width=True)
                     else:
@@ -290,7 +290,7 @@ with st.container(border=True, key="view_panel"):
                 st.error("Cannot connect to Proxy.")
 
     else:
-        st.subheader("Enterprise DLP Config")
+        st.subheader("⚙️ Enterprise DLP Config")
         st.caption("Configure which JSON fields the proxy encrypts on the fly.")
 
         # Admin key box no longer stretches the full panel width — a
@@ -377,7 +377,7 @@ with st.container(border=True, key="view_panel"):
                 st.error("Cannot reach proxy — is it running?")
 
         st.divider()
-        if st.button("View Current Active Fields"):
+        if st.button("🔄 View Current Active Fields"):
             try:
                 cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", headers=TUNNEL_HEADERS)
                 if cfg_res.status_code == 200:
@@ -390,7 +390,7 @@ with st.container(border=True, key="view_panel"):
 # --- RESTORED: Live Expiry & Retrieval Demo (With thread-safe st.rerun loop) ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     with st.container(border=True, key="expiry_panel"):
-        st.subheader("Live Expiry & Retrieval Test")
+        st.subheader("⏱️ Live Expiry & Retrieval Test")
 
         timer_placeholder = st.empty()
         action_placeholder = st.empty()
@@ -423,4 +423,4 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
             else:
                 timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
         else:
-            timer_placeholder.error("**TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
