@@ -119,7 +119,7 @@ with st.sidebar:
         try:
             res = requests.post(f"{PROXY_URL}/api/admin/config", json=payload, headers=headers)
             if res.status_code in [200, 201]:
-                st.success(f"Active fields: {res.json().get(\'active_fields\')}")
+                st.success(f"Active fields: {res.json().get('active_fields')}")
             elif res.status_code == 401:
                 st.error("Invalid Admin Key!")
             else:
@@ -134,7 +134,7 @@ with st.sidebar:
         try:
             cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
             if cfg_res.status_code == 200:
-                st.info(f"Currently encrypting: {cfg_res.json().get(\'active_fields\')}")
+                st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
             else:
                 st.warning(f"Could not fetch config: {cfg_res.status_code}")
         except requests.exceptions.ConnectionError:
