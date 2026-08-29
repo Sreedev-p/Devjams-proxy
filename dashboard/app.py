@@ -91,13 +91,27 @@ st.markdown(f"""
         box-shadow: {THEME["card_shadow"]};
     }}
 
-    .stTextInput input:focus {{ border-color: {THEME["accent"]} !important; }}
+    .stTextInput input:focus {{
+        border-color: {THEME["accent"]} !important;
+        box-shadow: 0 0 0 1px {THEME["accent"]} !important;
+        outline: none !important;
+    }}
+
+    .stTextInput input:focus-visible {{
+        box-shadow: 0 0 0 1px {THEME["accent"]} !important;
+        outline: none !important;
+    }}
 
     .stSelectbox > div > div {{
         background-color: {THEME["surface"]} !important;
         border: 1px solid {THEME["border"]} !important;
         border-radius: 8px !important;
         color: {THEME["text"]} !important;
+    }}
+
+    .stSelectbox > div > div:focus-within {{
+        border-color: {THEME["accent"]} !important;
+        box-shadow: 0 0 0 1px {THEME["accent"]} !important;
     }}
 
     .stButton button {{
@@ -128,6 +142,18 @@ st.markdown(f"""
         border-radius: 10px;
         color: {THEME["text"]} !important;
         box-shadow: {THEME["card_shadow"]};
+    }}
+
+    div[data-testid="stAlert"] p,
+    div[data-testid="stAlert"] span,
+    div[data-testid="stAlert"] div,
+    div[data-testid="stAlert"] a {{
+        color: {THEME["text"]} !important;
+    }}
+
+    div[data-testid="stAlert"] code {{
+        color: {THEME["accent"]} !important;
+        background-color: {THEME["surface_alt"]} !important;
     }}
 
     hr {{ border-color: {THEME["border"]} !important; }}
