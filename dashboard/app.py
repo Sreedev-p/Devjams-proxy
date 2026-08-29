@@ -203,6 +203,14 @@ st.markdown(f"""
 
     .st-key-view_selector label > div:first-child {{ display: none !important; }}
 
+    /* The native <input type="radio"> underneath isn't fully hidden by
+       the rule above, so the browser paints its own default indicator
+       using accent-color — which defaults to a system pink/red on many
+       browsers/OSes when left unset. Force it to match the theme. */
+    .st-key-view_selector input[type="radio"] {{
+        accent-color: {THEME["accent"]} !important;
+    }}
+
     .st-key-view_selector label > div:last-child {{
         padding: 10px 22px !important;
         border-radius: 999px !important;
