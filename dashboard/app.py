@@ -52,7 +52,7 @@ st.markdown(f"""
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(5, 5, 5, 0.6); 
+        background-color: rgba(5, 5, 5, 0.2); 
         z-index: 0;
         pointer-events: none;
     }}
