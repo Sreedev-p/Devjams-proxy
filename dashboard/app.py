@@ -87,10 +87,15 @@ st.markdown(
         font-size: 0.9rem !important;
     }}
 
-    [data-testid="stMetricValue"] {{
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricValue"] * {{
         color: {THEME["text"]};
-        font-size: 2.3rem !important;
-        line-height: 1.05 !important;
+        font-size: 1.3rem !important;
+        line-height: 1.3 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        overflow-wrap: break-word !important;
     }}
 
     div[data-testid="stVerticalBlockBorderWrapper"] {{
