@@ -16,7 +16,7 @@ except Exception:
 # --- Color tokens ---
 if dark_mode:
     THEME = {
-        bg": "#0B1020",
+        "bg": "#0B1020",
     "dot": "rgba(148, 163, 184, 0.08)",
     "text": "#E6EEF8",
     "muted": "#94A3B8",
