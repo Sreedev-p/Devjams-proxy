@@ -272,8 +272,8 @@ st.markdown(f"""
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
-PROXY_URL = "https://56d2bcc776805b.lhr.life"
-BACKEND_URL = "https://353bd044ed9e1d.lhr.life"
+PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
+BACKEND_URL = "https://silver-rats-play.loca.lt"
 
 # --- Switchable View: User View vs Hacker View vs Admin View ---
 st.caption("SWITCH VIEW")
