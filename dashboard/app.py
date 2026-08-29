@@ -287,7 +287,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
+st.title("DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
