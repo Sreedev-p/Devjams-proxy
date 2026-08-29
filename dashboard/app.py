@@ -5,7 +5,7 @@ import base64
 from pathlib import Path
 
 # --- Configuration ---
-st.set_page_config(page_title="DataExpiry Demo", layout="wide")
+st.set_page_config(page_title="DataExpiry Demo", layout="wide", initial_sidebar_state="collapsed")
 
 # --- THEME DETECTION ---
 # Streamlit already ships a native Light/Dark/System switcher (the "..." menu -> Settings).
@@ -174,25 +174,6 @@ st.markdown(f"""
         box-shadow: {THEME["card_shadow"]};
     }}
 
-    /* Sidebar specific */
-    [data-testid="stSidebar"] {{
-        background-color: {THEME["sidebar_bg"]};
-        border-right: 1px solid {THEME["border"]};
-    }}
-
-    [data-testid="stSidebar"] .stTextInput input {{
-        font-size: 13px !important;
-    }}
-
-    [data-testid="stSidebar"] .stMarkdownContainer {{
-        font-size: 14px !important;
-        color: {THEME["text"]} !important;
-    }}
-
-    [data-testid="stSidebar"] h2 {{
-        font-size: 1.5rem !important;
-    }}
-
     /* Divider */
     hr {{
         margin: 2rem 0 !important;
@@ -294,57 +275,19 @@ st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 PROXY_URL = "https://56d2bcc776805b.lhr.life"
 BACKEND_URL = "https://353bd044ed9e1d.lhr.life"
 
-# =========================================================
-# SIDEBAR: Enterprise DLP Admin Config Panel
-# =========================================================
-with st.sidebar:
-    st.header("⚙️ Enterprise DLP Config")
-
-    st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
-
-    admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
-    target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
-
-    if st.button("Apply Security Policies"):
-        headers = {"X-Admin-Key": admin_key}
-        payload = {"fields": target_fields}
-        try:
-            res = requests.post(f"{PROXY_URL}/api/admin/config", json=payload, headers=headers)
-            if res.status_code in [200, 201]:
-                st.success(f"Active fields: {res.json().get('active_fields')}")
-            elif res.status_code == 401:
-                st.error("Invalid Admin Key!")
-            else:
-                st.error(f"Unexpected error: {res.status_code} - {res.text}")
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot reach proxy — is it running?")
-
-    st.divider()
-
-    # Read-only live view of current active fields (no auth required)
-    if st.button("View Current Active Fields"):
-        try:
-            cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
-            if cfg_res.status_code == 200:
-                st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
-            else:
-                st.warning(f"Could not fetch config: {cfg_res.status_code}")
-        except requests.exceptions.ConnectionError:
-            st.warning("Proxy unreachable.")
-
-# --- Switchable View: User View vs Hacker View ---
+# --- Switchable View: User View vs Hacker View vs Admin View ---
 st.caption("SWITCH VIEW")
 active_view = st.radio(
     "View",
-    ["User View", "Hacker View"],
+    ["👤 User View", "🕵️ Hacker View", "⚙️ Admin View"],
     horizontal=True,
     label_visibility="collapsed",
     key="view_selector",
 )
 
 with st.container(border=True, key="view_panel"):
-    if active_view == "User View":
-        st.subheader("Client / Application View")
+    if active_view == "👤 User View":
+        st.subheader("👤 Client / Application View")
         user_name = st.text_input("Customer Name", "Alice Smith")
         sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
@@ -376,8 +319,8 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
-    else:
-        st.subheader("Hacker View (Target Database)")
+    elif active_view == "🕵️ Hacker View":
+        st.subheader("🕵️ Hacker View (Target Database)")
         st.info("Live peek inside `company_database.db`:")
 
         if st.button("Refresh Database View"):
@@ -394,10 +337,45 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.warning("Target backend (port 5000) is not running.")
 
+    else:
+        st.subheader("⚙️ Enterprise DLP Config")
+
+        st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
+
+        admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
+        target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
+
+        if st.button("Apply Security Policies"):
+            headers = {"X-Admin-Key": admin_key}
+            payload = {"fields": target_fields}
+            try:
+                res = requests.post(f"{PROXY_URL}/api/admin/config", json=payload, headers=headers)
+                if res.status_code in [200, 201]:
+                    st.success(f"Active fields: {res.json().get('active_fields')}")
+                elif res.status_code == 401:
+                    st.error("Invalid Admin Key!")
+                else:
+                    st.error(f"Unexpected error: {res.status_code} - {res.text}")
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot reach proxy — is it running?")
+
+        st.divider()
+
+        # Read-only live view of current active fields (no auth required)
+        if st.button("🔄 View Current Active Fields"):
+            try:
+                cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
+                if cfg_res.status_code == 200:
+                    st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
+                else:
+                    st.warning(f"Could not fetch config: {cfg_res.status_code}")
+            except requests.exceptions.ConnectionError:
+                st.warning("Proxy unreachable.")
+
 # --- Live Expiry & Retrieval Demo ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     with st.container(border=True, key="expiry_panel"):
-        st.subheader("Live Expiry & Retrieval Test")
+        st.subheader("⏱️ Live Expiry & Retrieval Test")
 
         st.button("🔄 Refresh Timer")
 
