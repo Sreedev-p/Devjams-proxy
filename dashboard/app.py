@@ -61,22 +61,25 @@ st.markdown(f"""
         background-color: rgba(0, 0, 0, 0);
     }}
 
-    html, body, [class*="css"], [class*="st-"] {{
-        font-family: \'Manrope\', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-size: 18px !important;
-        letter-spacing: -0.1px;
-    }}
+    .stApp, .stApp * {{
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 18px !important;
+    letter-spacing: -0.1px;
+}}
 
-    h1, h2, h3, h4 {{
-        font-family: \'Space Grotesk\', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 600 !important;
-        letter-spacing: -0.8px;
-    }}
+.stApp h1, .stApp h2, .stApp h3, .stApp h4 {{
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.8px;
+}}
 
-    h1 {{
-        font-weight: 700 !important;
-        letter-spacing: -1.2px;
-    }}
+.stApp h1 {{
+    font-weight: 700 !important;
+    letter-spacing: -1.2px;
+}}
+[data-testid="stSidebar"] .stTextInput input {{
+    font-size: 14px !important;
+}}
 
     .stTextInput input, .stSelectbox div[data-baseweb="select"] {{
         font-size: 16px !important;
