@@ -115,8 +115,8 @@ st.markdown(f"""
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
-PROXY_URL = "https://c361391c250129.lhr.life"
-BACKEND_URL = "https://6e63d2d51e6eac.lhr.life"
+PROXY_URL = "https://327d3d6a2126da.lhr.life"
+BACKEND_URL = "https://32abfab4eeae84.lhr.life"
 
 # --- Main Split-Screen UI ---
 col1, col2 = st.columns(2)
