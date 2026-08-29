@@ -2,22 +2,18 @@ import streamlit as st
 import requests
 import time
 import base64
-import pandas as pd
 from pathlib import Path
 
 # --- Configuration ---
 st.set_page_config(page_title="DataExpiry Demo", layout="wide", initial_sidebar_state="collapsed")
 
 # --- THEME DETECTION ---
-# Streamlit already ships a native Light/Dark/System switcher (the "..." menu -> Settings).
-# We read the currently active theme from it instead of adding a second, redundant toggle.
 try:
     dark_mode = st.context.theme.type == "dark"
 except Exception:
-    # Older Streamlit versions without st.context.theme -> default to light styling
     dark_mode = False
 
-# --- Color tokens for each theme, matching the light/dark pair in the reference site ---
+# --- Color tokens ---
 if dark_mode:
     THEME = {
         "bg": "#0B0B09",
@@ -35,15 +31,6 @@ if dark_mode:
         "button_shadow": "0 0 0 1px rgba(245, 208, 51, 0.12), 0 6px 20px rgba(245, 208, 51, 0.16)",
         "button_shadow_hover": "0 0 0 1px rgba(245, 208, 51, 0.2), 0 8px 26px rgba(245, 208, 51, 0.26)",
         "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.35)",
-        "role_user": "#F5D033",
-        "role_user_text": "#14140F",
-        "role_user_shadow": "0 0 0 1px rgba(245, 208, 51, 0.18), 0 6px 20px rgba(245, 208, 51, 0.22)",
-        "role_hacker": "#FF4D5E",
-        "role_hacker_text": "#FFFFFF",
-        "role_hacker_shadow": "0 0 0 1px rgba(255, 77, 94, 0.2), 0 6px 20px rgba(255, 77, 94, 0.26)",
-        "role_admin": "#3E7BFA",
-        "role_admin_text": "#FFFFFF",
-        "role_admin_shadow": "0 0 0 1px rgba(62, 123, 250, 0.2), 0 6px 20px rgba(62, 123, 250, 0.26)",
     }
 else:
     THEME = {
@@ -62,92 +49,43 @@ else:
         "button_shadow": "none",
         "button_shadow_hover": "none",
         "card_shadow": "0 1px 2px rgba(20, 20, 15, 0.04)",
-        "role_user": "#F5D033",
-        "role_user_text": "#14140F",
-        "role_user_shadow": "none",
-        "role_hacker": "#FF4D5E",
-        "role_hacker_text": "#FFFFFF",
-        "role_hacker_shadow": "none",
-        "role_admin": "#3E7BFA",
-        "role_admin_text": "#FFFFFF",
-        "role_admin_shadow": "none",
     }
 
-# --- CUSTOM THEME (CSS INJECTION) - "TEAK-STYLE" REDESIGN, LIGHT + DARK ---
+# --- CUSTOM THEME (CSS INJECTION) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-    /* Background with subtle dot grid, like the reference site (both themes) */
     [data-testid="stAppViewContainer"] {{
         background-color: {THEME["bg"]};
         background-image: radial-gradient(circle, {THEME["dot"]} 1px, transparent 1px);
         background-size: 22px 22px;
     }}
 
-    [data-testid="stAppViewContainer"] > .main {{
-        position: relative;
-        z-index: 1;
-    }}
+    [data-testid="stAppViewContainer"] > .main {{ position: relative; z-index: 1; }}
+    [data-testid="stHeader"] {{ background-color: rgba(0, 0, 0, 0); }}
 
-    [data-testid="stHeader"] {{
-        background-color: rgba(0, 0, 0, 0);
-    }}
-
-    /* Global font sizing */
     .stApp {{
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-size: 16px !important;
-        letter-spacing: -0.1px;
-        color: {THEME["text"]} !important;
-    }}
-
-    .stApp h1 {{
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 800 !important;
-        letter-spacing: -1.4px;
-        font-size: 2.75rem !important;
-        margin-bottom: 1.5rem !important;
-        color: {THEME["text"]} !important;
-    }}
-
-    .stApp h2 {{
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.9px;
-        font-size: 1.75rem !important;
-        margin-bottom: 1rem !important;
-        color: {THEME["text"]} !important;
-    }}
-
-    .stApp h3 {{
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.5px;
-        font-size: 1.25rem !important;
-        color: {THEME["text"]} !important;
-    }}
-
-    /* Input fields */
-    .stTextInput input {{
-        font-size: 14px !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        padding: 10px 12px !important;
+        font-size: 16px !important;
+        color: {THEME["text"]} !important;
+    }}
+
+    .stApp h1, .stApp h2, .stApp h3 {{
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        color: {THEME["text"]} !important;
+    }}
+
+    .stTextInput input {{
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
         background-color: {THEME["surface"]} !important;
         border: 1px solid {THEME["border"]} !important;
         border-radius: 8px !important;
         color: {THEME["text"]} !important;
         box-shadow: {THEME["card_shadow"]};
-        transition: border-color 0.15s ease;
     }}
 
-    .stTextInput input:focus {{
-        border-color: {THEME["accent"]} !important;
-    }}
-
-    .stSelectbox {{
-        font-size: 14px !important;
-    }}
+    .stTextInput input:focus {{ border-color: {THEME["accent"]} !important; }}
 
     .stSelectbox > div > div {{
         background-color: {THEME["surface"]} !important;
@@ -156,97 +94,39 @@ st.markdown(f"""
         color: {THEME["text"]} !important;
     }}
 
-    /* Buttons - yellow pill, like the reference "Book a demo" button */
     .stButton button {{
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-weight: 700 !important;
-        letter-spacing: -0.2px;
-        font-size: 14px !important;
-        padding: 10px 20px !important;
         background-color: {THEME["accent"]} !important;
         color: {THEME["accent_text"]} !important;
-        border: none !important;
         border-radius: 999px !important;
         box-shadow: {THEME["button_shadow"]};
-        transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+        transition: all 0.15s ease;
     }}
 
     .stButton button:hover {{
         background-color: {THEME["accent_hover"]} !important;
-        color: {THEME["accent_text"]} !important;
         box-shadow: {THEME["button_shadow_hover"]};
         transform: translateY(-1px);
     }}
 
-    .stButton button:active {{
-        background-color: {THEME["accent_active"]} !important;
-    }}
-
-    /* Alerts & Messages */
     div[data-testid="stAlert"] {{
         background-color: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
         border-radius: 10px;
-        padding: 16px !important;
-        font-size: 14px !important;
         color: {THEME["text"]} !important;
         box-shadow: {THEME["card_shadow"]};
     }}
 
-    /* Divider */
-    hr {{
-        margin: 2rem 0 !important;
-        border-color: {THEME["border"]} !important;
-    }}
+    hr {{ border-color: {THEME["border"]} !important; }}
 
-    /* JSON display - monospace, matches the technical look of the reference site */
-    .stJson {{
+    .stJson, .stDataFrame {{
         font-family: 'JetBrains Mono', monospace !important;
-        font-size: 13px !important;
         background-color: {THEME["surface_alt"]} !important;
-        border: 1px solid {THEME["border"]} !important;
         border-radius: 8px !important;
         box-shadow: {THEME["card_shadow"]};
     }}
 
-    /* Cards for columns (subheaders act as section headers) */
-    .stColumn {{
-        background-color: transparent;
-    }}
-
-    /* Captions - monospace, mirrors the small stat labels ("30%+ Higher CTR") in the reference */
-    .stCaption, [data-testid="stCaptionContainer"] {{
-        font-family: 'JetBrains Mono', monospace !important;
-        color: {THEME["muted"]} !important;
-        letter-spacing: 0.6px;
-        text-transform: uppercase;
-        font-size: 12px !important;
-    }}
-
-    /* Metric widgets - used on the SOC Dashboard tab */
-    div[data-testid="stMetric"] {{
-        background-color: {THEME["surface"]} !important;
-        border: 1px solid {THEME["border"]} !important;
-        border-radius: 14px !important;
-        padding: 1rem 1.25rem !important;
-        box-shadow: {THEME["card_shadow"]};
-    }}
-
-    div[data-testid="stMetricLabel"] {{
-        font-family: 'JetBrains Mono', monospace !important;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        color: {THEME["muted"]} !important;
-    }}
-
-    div[data-testid="stMetricValue"] {{
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-        font-weight: 800 !important;
-        color: {THEME["text"]} !important;
-    }}
-
-    /* ===== View switcher: turn st.radio into a premium pill toggle, ===== */
-    /* ===== not the default Streamlit radio look.                    ===== */
     .st-key-view_selector div[role="radiogroup"] {{
         display: inline-flex;
         gap: 4px;
@@ -256,43 +136,21 @@ st.markdown(f"""
         padding: 4px;
     }}
 
-    .st-key-view_selector label {{
-        margin: 0 !important;
-        cursor: pointer;
-    }}
+    .st-key-view_selector label > div:first-child {{ display: none !important; }}
 
-    /* Hide the default circular radio indicator */
-    .st-key-view_selector label > div:first-child {{
-        display: none !important;
-    }}
-
-    /* Style the option text as a pill button */
     .st-key-view_selector label > div:last-child {{
         padding: 10px 22px !important;
         border-radius: 999px !important;
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-weight: 700 !important;
-        font-size: 14px !important;
         color: {THEME["muted"]} !important;
-        white-space: nowrap;
-        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     }}
 
-    .st-key-view_selector label:hover > div:last-child {{
-        color: {THEME["text"]} !important;
-    }}
+    .st-key-view_selector label:hover > div:last-child {{ color: {THEME["text"]} !important; }}
 
-    /* Selected pill - highlighted in the same accent as the primary buttons */
     .st-key-view_selector label:has(input:checked) > div:last-child {{
         background-color: {THEME["accent"]} !important;
         color: {THEME["accent_text"]} !important;
         box-shadow: {THEME["button_shadow"]};
-    }}
-
-    /* ===== Card panels wrapping each view / the expiry test ===== */
-    .st-key-view_panel,
-    .st-key-expiry_panel {{
-        border-radius: 18px !important;
     }}
 
     .st-key-view_panel > div[data-testid="stVerticalBlockBorderWrapper"],
@@ -303,62 +161,34 @@ st.markdown(f"""
         box-shadow: {THEME["card_shadow"]};
         padding: 1.75rem !important;
     }}
-
-    .st-key-expiry_panel {{
-        margin-top: 1.5rem;
-    }}
-
-    /* ===== "+" add-field button — smaller, ghost style so it reads as an ===== */
-    /* ===== inline control rather than a full primary action button.     ===== */
-    .st-key-add_field_btn button {{
-        background-color: transparent !important;
-        color: {THEME["accent_active"] if not dark_mode else THEME["accent"]} !important;
-        border: 1px dashed {THEME["border"]} !important;
-        box-shadow: none !important;
-        width: auto;
-        padding-left: 24px !important;
-        padding-right: 24px !important;
-    }}
-
-    .st-key-add_field_btn button:hover {{
-        border-color: {THEME["accent"]} !important;
-        background-color: {THEME["surface_alt"]} !important;
-    }}
-
-    /* Remove-field "✕" buttons — compact square icon buttons */
-    div[data-testid="column"] .stButton button[kind] {{
-        padding: 10px 12px !important;
-    }}
     </style>
 """, unsafe_allow_html=True)
 
-st.title("DataExpiry: Zero-Code Cryptographic Erasure")
+st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
-# dashboard/app.py (around line 8)
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
 BACKEND_URL = "https://thirty-plants-boil.loca.lt"
 
-# Bypass headers so ngrok/localtunnel interstitial warning pages don't get
-# returned as HTML in place of JSON and crash res.json() parsing.
+# RESTORED BYPASS HEADERS
 TUNNEL_HEADERS = {
     "Bypass-Tunnel-Reminder": "true",
     "ngrok-skip-browser-warning": "true",
     "User-Agent": "DataExpiry-App/1.0"
 }
 
-# --- Switchable View: User View vs Hacker View vs Admin View vs SOC Dashboard ---
+# --- Switchable View ---
 st.caption("SWITCH VIEW")
 active_view = st.radio(
     "View",
-    ["User View", "Hacker View", "Admin View", "SOC Dashboard"],
+    ["👤 User View", "🕵️ Hacker View", "⚙️ Admin View", "📊 SOC Dashboard"],
     horizontal=True,
     label_visibility="collapsed",
     key="view_selector",
 )
 
 with st.container(border=True, key="view_panel"):
-    if active_view == "User View":
-        st.subheader("Client / Application View")
+    if active_view == "👤 User View":
+        st.subheader("👤 Client / Application View")
         user_name = st.text_input("Customer Name", "Alice Smith")
         sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
@@ -390,8 +220,8 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
-    elif active_view == "Hacker View":
-        st.subheader("Hacker View (Target Database)")
+    elif active_view == "🕵️ Hacker View":
+        st.subheader("🕵️ Hacker View (Target Database)")
         st.info("Live peek inside `company_database.db`:")
 
         if st.button("Refresh Database View"):
@@ -404,69 +234,50 @@ with st.container(border=True, key="view_panel"):
                     else:
                         st.write("Database is currently empty.")
                 else:
-                    st.error("Failed to read database.")
+                    st.error(f"Failed to read database. Status Code: {db_res.status_code}")
             except requests.exceptions.ConnectionError:
                 st.warning("Target backend (port 5000) is not running.")
+                
+    elif active_view == "📊 SOC Dashboard":
+        st.subheader("📊 Security Operations Center (SIEM)")
+        st.caption("Live immutable audit trail of all cryptographic proxy events.")
+        
+        soc_key = st.text_input("Admin API Key", type="password", key="soc_admin_key")
+        
+        if st.button("Fetch Live Telemetry"):
+            try:
+                headers = {"X-Admin-Key": soc_key, **TUNNEL_HEADERS}
+                res = requests.get(f"{PROXY_URL}/api/admin/logs", headers=headers)
+                
+                if res.status_code == 200:
+                    data = res.json()
+                    summary = data.get("summary", {})
+                    logs = data.get("logs", [])
+                    
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Active Encrypted Keys", summary.get("active_keys", 0))
+                    col2.metric("Shredded Keys (Expired)", summary.get("shredded_keys", 0))
+                    col3.metric("Decryption Attempts", summary.get("decryption_attempts", 0))
+                    
+                    st.divider()
+                    st.write("### 📜 Immutable Event Ledger")
+                    if logs:
+                        st.dataframe(logs, use_container_width=True)
+                    else:
+                        st.info("No cryptographic events logged yet.")
+                elif res.status_code == 401:
+                    st.error("Invalid Admin Key!")
+                else:
+                    st.error(f"Error fetching logs: {res.status_code}")
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot connect to Proxy.")
 
-    elif active_view == "Admin View":
-        st.subheader("Enterprise DLP Config")
+    else:
+        st.subheader("⚙️ Enterprise DLP Config")
+        st.caption("Configure which JSON fields the proxy encrypts on the fly.")
 
-        st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
-
-        # Admin key box no longer stretches the full panel width — a
-        # password/key field doesn't need that much horizontal space.
-        key_col, _spacer = st.columns([2, 3])
-        with key_col:
-            admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
-
-        # --- Dynamic "Fields to Encrypt" list, replaces the old single ---
-        # --- comma-separated text input with a proper +/- add/remove UI. ---
-        # Fields are packed two-per-row instead of one wide box per row, so
-        # the leftover horizontal space is used for the next field instead
-        # of sitting empty.
-        st.caption("Fields to Encrypt")
-
-        if "encrypt_fields" not in st.session_state:
-            st.session_state.encrypt_fields = ["sensitive_data"]
-
-        fields_to_remove = None
-        field_list = st.session_state.encrypt_fields
-        for row_start in range(0, len(field_list), 2):
-            row_cols = st.columns([3, 1, 3, 1])
-            for offset in range(2):
-                idx = row_start + offset
-                if idx >= len(field_list):
-                    break
-                field_col = row_cols[offset * 2]
-                remove_col = row_cols[offset * 2 + 1]
-                with field_col:
-                    field_list[idx] = st.text_input(
-                        f"Field {idx + 1}",
-                        value=field_list[idx],
-                        key=f"encrypt_field_{idx}",
-                        label_visibility="collapsed",
-                        placeholder="e.g. sensitive_data",
-                    )
-                with remove_col:
-                    # Only offer removal if more than one field remains, so
-                    # the list can never be emptied down to zero rows.
-                    if len(field_list) > 1:
-                        if st.button("✕", key=f"remove_field_{idx}"):
-                            fields_to_remove = idx
-
-        if fields_to_remove is not None:
-            st.session_state.encrypt_fields.pop(fields_to_remove)
-            st.rerun()
-
-        if st.button("＋ Add Field", key="add_field_btn"):
-            st.session_state.encrypt_fields.append("")
-            st.rerun()
-
-        # Build the comma-separated string the backend API expects, from
-        # whatever non-empty fields the user has added via the UI above.
-        target_fields = ",".join(
-            f.strip() for f in st.session_state.encrypt_fields if f.strip()
-        )
+        admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
+        target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
 
         if st.button("Apply Security Policies"):
             headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
@@ -483,9 +294,7 @@ with st.container(border=True, key="view_panel"):
                 st.error("Cannot reach proxy — is it running?")
 
         st.divider()
-
-        # Read-only live view of current active fields (no auth required)
-        if st.button("View Current Active Fields"):
+        if st.button("🔄 View Current Active Fields"):
             try:
                 cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", headers=TUNNEL_HEADERS)
                 if cfg_res.status_code == 200:
@@ -495,106 +304,40 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.warning("Proxy unreachable.")
 
-    else:  # SOC Dashboard
-        st.subheader("SOC Dashboard — Cryptographic Audit Trail")
-        st.caption(
-            "Live security event log from the proxy's immutable audit trail. "
-            "Tracks every KEY_GENERATED, DECRYPTION_ATTEMPT, and KEY_SHREDDED event."
-        )
-
-        # Reuse the Admin key if it was already entered on the Admin tab this
-        # session, otherwise let the user paste it in directly here.
-        default_soc_key = st.session_state.get("admin_key_input", "")
-        soc_admin_key = st.text_input(
-            "Admin API Key",
-            value=default_soc_key,
-            type="password",
-            key="soc_admin_key_input",
-        )
-
-        refresh_col, _ = st.columns([1, 4])
-        with refresh_col:
-            fetch_logs = st.button("🔄 Refresh Logs")
-
-        if fetch_logs:
-            if not soc_admin_key:
-                st.error("Enter the Admin API Key to view the audit trail.")
-            else:
-                headers = {"X-Admin-Key": soc_admin_key, **TUNNEL_HEADERS}
-                try:
-                    logs_res = requests.get(f"{PROXY_URL}/api/admin/logs", headers=headers)
-
-                    if logs_res.status_code == 200:
-                        logs = logs_res.json()
-                        st.session_state["soc_logs"] = logs
-                    elif logs_res.status_code == 401:
-                        st.error("Invalid Admin Key!")
-                        st.session_state.pop("soc_logs", None)
-                    else:
-                        st.error(f"Unexpected error: {logs_res.status_code} - {logs_res.text}")
-                        st.session_state.pop("soc_logs", None)
-                except requests.exceptions.ConnectionError:
-                    st.error("Cannot reach proxy — is it running?")
-
-        logs = st.session_state.get("soc_logs")
-
-        if logs:
-            df = pd.DataFrame(logs)
-
-            # Normalize event-type column name in case the backend uses a
-            # different key (e.g. "event_type" vs "event")
-            event_col = "event_type" if "event_type" in df.columns else (
-                "event" if "event" in df.columns else None
-            )
-
-            key_generated = int((df[event_col] == "KEY_GENERATED").sum()) if event_col else 0
-            decryption_attempts = int((df[event_col] == "DECRYPTION_ATTEMPT").sum()) if event_col else 0
-            key_shredded = int((df[event_col] == "KEY_SHREDDED").sum()) if event_col else 0
-
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Total Events", len(df))
-            m2.metric("Keys Generated", key_generated)
-            m3.metric("Decryption Attempts", decryption_attempts)
-            m4.metric("Keys Shredded", key_shredded)
-
-            st.divider()
-            st.caption("EVENT LEDGER")
-
-            # Show newest events first if there's a timestamp-like column
-            ts_col = next((c for c in df.columns if "time" in c.lower()), None)
-            if ts_col:
-                df = df.sort_values(by=ts_col, ascending=False)
-
-            st.dataframe(df, use_container_width=True, hide_index=True)
-        else:
-            st.info("No logs loaded yet. Enter the Admin API Key and click **Refresh Logs**.")
-
-# --- Live Expiry & Retrieval Demo ---
+# --- RESTORED: Live Expiry & Retrieval Demo (With thread-safe st.rerun loop) ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     with st.container(border=True, key="expiry_panel"):
-        st.subheader("Live Expiry & Retrieval Test")
+        st.subheader("⏱️ Live Expiry & Retrieval Test")
 
-        st.button("Refresh Timer")
+        timer_placeholder = st.empty()
+        action_placeholder = st.empty()
 
+        with action_placeholder.container():
+            if st.button("Attempt Decrypted Read via Proxy"):
+                rec_id = st.session_state["last_record_id"]
+                try:
+                    fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
+
+                    if fetch_res.status_code == 200:
+                        st.success("200 OK: Key active. Decrypted plaintext restored.")
+                        st.json(fetch_res.json())
+                    elif fetch_res.status_code == 410:
+                        st.error("410 Gone: Decryption key permanently erased from Vault.")
+                        st.json(fetch_res.json())
+                    else:
+                        st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
+                except requests.exceptions.ConnectionError:
+                    st.error("Cannot connect to Proxy for retrieval.")
+
+        # Thread-Safe Live Countdown Loop
         remaining = int(st.session_state["expiry_time"] - time.time())
 
         if remaining > 0:
-            st.warning(f"Key TTL active: {remaining}s remaining before cryptographic shredding...")
+            if remaining <= 60: 
+                timer_placeholder.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
+                time.sleep(1)
+                st.rerun() 
+            else:
+                timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
         else:
-            st.error("TTL expired! Cryptographic key has been mathematically shredded in the Vault.")
-
-        if st.button("Attempt Decrypted Read via Proxy"):
-            rec_id = st.session_state["last_record_id"]
-            try:
-                fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
-
-                if fetch_res.status_code == 200:
-                    st.success("200 OK: Key active. Decrypted plaintext restored.")
-                    st.json(fetch_res.json())
-                elif fetch_res.status_code == 410:
-                    st.error("410 Gone: Decryption key permanently erased from Vault.")
-                    st.json(fetch_res.json())
-                else:
-                    st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
-            except requests.exceptions.ConnectionError:
-                st.error("Cannot connect to Proxy for retrieval.")
+            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
