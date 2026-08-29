@@ -291,7 +291,7 @@ st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
-BACKEND_URL = "https://silver-rats-play.loca.lt"
+BACKEND_URL = "https://thirty-plants-boil.loca.lt"
 
 # --- Switchable View: User View vs Hacker View vs Admin View ---
 st.caption("SWITCH VIEW")
