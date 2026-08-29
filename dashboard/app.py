@@ -26,9 +26,9 @@ THEME = {
     "surface_alt": "#182338",
     "border": "rgba(148, 163, 184, 0.18)",
     "text": "#E5EEF8",
-    "muted": "#94A3B8",
-    "accent": "#22D3EE",
-    "accent_hover": "#06B6D4",
+    "muted": "#B6C2D1",
+    "accent": "#1FB8D1",
+    "accent_hover": "#18A7BE",
     "accent_text": "#04131A",
     "success": "#34D399",
     "warning": "#FBBF24",
@@ -45,8 +45,7 @@ st.markdown(
     }}
 
     .stApp {{
-        background:
-            linear-gradient(180deg, {THEME["bg"]} 0%, #0F172A 100%);
+        background: linear-gradient(180deg, {THEME["bg"]} 0%, #0F172A 100%);
         color: {THEME["text"]};
     }}
 
@@ -83,12 +82,15 @@ st.markdown(
     }}
 
     [data-testid="stMetricLabel"] {{
-        color: {THEME["muted"]};
+        color: {THEME["muted"]} !important;
         font-weight: 600;
+        font-size: 0.9rem !important;
     }}
 
     [data-testid="stMetricValue"] {{
         color: {THEME["text"]};
+        font-size: 2.3rem !important;
+        line-height: 1.05 !important;
     }}
 
     div[data-testid="stVerticalBlockBorderWrapper"] {{
@@ -121,10 +123,12 @@ st.markdown(
         font-weight: 700 !important;
         padding: 0.65rem 1rem !important;
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        transition: background 0.15s ease, transform 0.15s ease;
     }}
 
     .stButton button:hover {{
         background: {THEME["accent_hover"]} !important;
+        transform: translateY(-1px);
     }}
 
     .stAlert {{
@@ -137,20 +141,45 @@ st.markdown(
         overflow: hidden;
     }}
 
+    /* --- Top nav (st.radio used as tabs) --- */
     div[role="radiogroup"] {{
         gap: 0.5rem;
+        flex-wrap: wrap;
     }}
 
     div[role="radiogroup"] label {{
         background: rgba(24, 35, 56, 0.9);
         border: 1px solid {THEME["border"]};
         border-radius: 12px;
-        padding: 10px 14px;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }}
+
+    div[role="radiogroup"] label:hover {{
+        border-color: {THEME["accent"]};
     }}
 
     div[role="radiogroup"] label p {{
         color: {THEME["text"]} !important;
         font-weight: 600;
+    }}
+
+    /* Hide the default circular radio indicator so the label itself
+       reads as a selectable tab/pill. */
+    div[role="radiogroup"] label > div:first-child {{
+        display: none !important;
+    }}
+
+    /* Highlight whichever tab is actually selected. */
+    div[role="radiogroup"] label:has(input:checked) {{
+        background: {THEME["accent"]} !important;
+        border-color: {THEME["accent"]} !important;
+        box-shadow: 0 6px 18px rgba(31, 184, 209, 0.35);
+    }}
+
+    div[role="radiogroup"] label:has(input:checked) p {{
+        color: {THEME["accent_text"]} !important;
     }}
 
     .mono {{
@@ -188,37 +217,11 @@ st.markdown(
         max-width: 760px;
     }}
 
-        .section-note {{
-        color: {THEME["muted"]};
-        font-size: 0.95rem;
-        margin-bottom: 0.6rem;
-    }}
-
-    [data-testid="stMetricValue"] {{
-        font-size: 2.3rem !important;
-        line-height: 1.05 !important;
-    }}
-
-    [data-testid="stMetricLabel"] {{
-        color: #B6C2D1 !important;
-        font-size: 0.9rem !important;
-    }}
-
-    .stButton button {{
-        background: #1FB8D1 !important;
-        color: #04131A !important;
-    }}
-
-    .stButton button:hover {{
-        background: #18A7BE !important;
-    }}
-
     .section-note {{
-        color: #B6C2D1 !important;
+        color: {THEME["muted"]} !important;
+        font-size: 0.95rem;
         font-weight: 600;
-    }}
-
-    </style>
+        margin-bottom: 0.6rem;
     }}
     </style>
     """,
