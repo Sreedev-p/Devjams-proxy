@@ -10,7 +10,7 @@ st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 # --- CUSTOM THEME (CSS INJECTION) - LIGHT "TEAK-STYLE" REDESIGN ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
     /* Light off-white background with subtle dot grid, like the reference site */
     [data-testid="stAppViewContainer"] {
@@ -30,33 +30,33 @@ st.markdown("""
 
     /* Global font sizing */
     .stApp {
-        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-size: 16px !important;
         letter-spacing: -0.1px;
         color: #14140F !important;
     }
 
     .stApp h1 {
-        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 700 !important;
-        letter-spacing: -1.2px;
-        font-size: 2.5rem !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 800 !important;
+        letter-spacing: -1.4px;
+        font-size: 2.75rem !important;
         margin-bottom: 1.5rem !important;
         color: #14140F !important;
     }
 
     .stApp h2 {
-        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 600 !important;
-        letter-spacing: -0.8px;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.9px;
         font-size: 1.75rem !important;
         margin-bottom: 1rem !important;
         color: #14140F !important;
     }
 
     .stApp h3 {
-        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 600 !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 700 !important;
         letter-spacing: -0.5px;
         font-size: 1.25rem !important;
         color: #14140F !important;
@@ -65,7 +65,7 @@ st.markdown("""
     /* Input fields */
     .stTextInput input {
         font-size: 14px !important;
-        font-family: 'Manrope', sans-serif !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
         padding: 10px 12px !important;
         background-color: #FFFFFF !important;
         border: 1px solid #E2E0D9 !important;
@@ -85,8 +85,8 @@ st.markdown("""
 
     /* Buttons - yellow pill, like the reference "Book a demo" button */
     .stButton button {
-        font-family: 'Space Grotesk', sans-serif !important;
-        font-weight: 600 !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-weight: 700 !important;
         letter-spacing: -0.2px;
         font-size: 14px !important;
         padding: 10px 20px !important;
@@ -143,8 +143,9 @@ st.markdown("""
         border-color: #E2E0D9 !important;
     }
 
-    /* JSON display */
+    /* JSON display - monospace, matches the technical look of the reference site */
     .stJson {
+        font-family: 'JetBrains Mono', monospace !important;
         font-size: 13px !important;
         background-color: #FFFFFF !important;
         border: 1px solid #E2E0D9 !important;
@@ -156,8 +157,9 @@ st.markdown("""
         background-color: transparent;
     }
 
-    /* Captions */
+    /* Captions - monospace, mirrors the small stat labels ("30%+ Higher CTR") in the reference */
     .stCaption, [data-testid="stCaptionContainer"] {
+        font-family: 'JetBrains Mono', monospace !important;
         color: #6B6A63 !important;
     }
     </style>
