@@ -31,10 +31,10 @@ if bg_base64:
 else:
     bg_css = "background-color: #000000;"
 
-# --- CUSTOM THEME (CSS INJECTION) ---
+# --- CUSTOM THEME (CSS INJECTION) - FIXED ---
 st.markdown(f"""
     <style>
-    @import url(\'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap\');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
     [data-testid="stAppViewContainer"] {{
         {bg_css}
@@ -61,45 +61,95 @@ st.markdown(f"""
         background-color: rgba(0, 0, 0, 0);
     }}
 
-    .stApp, .stApp * {{
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    font-size: 18px !important;
-    letter-spacing: -0.1px;
-}}
-
-.stApp h1, .stApp h2, .stApp h3, .stApp h4 {{
-    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    font-weight: 600 !important;
-    letter-spacing: -0.8px;
-}}
-
-.stApp h1 {{
-    font-weight: 700 !important;
-    letter-spacing: -1.2px;
-}}
-[data-testid="stSidebar"] .stTextInput input {{
-    font-size: 14px !important;
-}}
-
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] {{
+    /* Global font sizing - reasonable defaults */
+    .stApp {{
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-size: 16px !important;
-        font-family: \'Manrope\', sans-serif !important;
+        letter-spacing: -0.1px;
     }}
 
+    .stApp h1 {{
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: -1.2px;
+        font-size: 2.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }}
+
+    .stApp h2 {{
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.8px;
+        font-size: 1.75rem !important;
+        margin-bottom: 1rem !important;
+    }}
+
+    .stApp h3 {{
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.5px;
+        font-size: 1.25rem !important;
+    }}
+
+    /* Input fields */
+    .stTextInput input {{
+        font-size: 14px !important;
+        font-family: 'Manrope', sans-serif !important;
+        padding: 10px 12px !important;
+    }}
+
+    .stSelectbox {{
+        font-size: 14px !important;
+    }}
+
+    /* Buttons */
     .stButton button {{
-        font-family: \'Space Grotesk\', sans-serif !important;
+        font-family: 'Space Grotesk', sans-serif !important;
         font-weight: 600 !important;
         letter-spacing: -0.2px;
+        font-size: 14px !important;
+        padding: 10px 20px !important;
     }}
 
+    /* Alerts & Messages */
     div[data-testid="stAlert"] {{
         background-color: rgba(17, 17, 17, 0.85);
         border: 1px solid #333333;
+        border-radius: 8px;
+        padding: 16px !important;
+        font-size: 14px !important;
+    }}
+
+    /* Sidebar specific */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(17, 17, 17, 0.9);
+    }}
+
+    [data-testid="stSidebar"] .stTextInput input {{
+        font-size: 13px !important;
+    }}
+
+    [data-testid="stSidebar"] .stMarkdownContainer {{
+        font-size: 14px !important;
+    }}
+
+    [data-testid="stSidebar"] h2 {{
+        font-size: 1.5rem !important;
+    }}
+
+    /* Divider */
+    hr {{
+        margin: 2rem 0 !important;
+    }}
+
+    /* JSON display */
+    .stJson {{
+        font-size: 13px !important;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-st.title("\U0001F6E1\uFE0F DataExpiry: Zero-Code Cryptographic Erasure")
+st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
 PROXY_URL = "https://56d2bcc776805b.lhr.life"
@@ -109,7 +159,7 @@ BACKEND_URL = "https://353bd044ed9e1d.lhr.life"
 # SIDEBAR: Enterprise DLP Admin Config Panel
 # =========================================================
 with st.sidebar:
-    st.header("\u2699\uFE0F Enterprise DLP Config")
+    st.header("⚙️ Enterprise DLP Config")
 
     st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
 
@@ -128,12 +178,12 @@ with st.sidebar:
             else:
                 st.error(f"Unexpected error: {res.status_code} - {res.text}")
         except requests.exceptions.ConnectionError:
-            st.error("Cannot reach proxy \u2014 is it running?")
+            st.error("Cannot reach proxy — is it running?")
 
     st.divider()
 
     # Read-only live view of current active fields (no auth required)
-    if st.button("\U0001F504 View Current Active Fields"):
+    if st.button("🔄 View Current Active Fields"):
         try:
             cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
             if cfg_res.status_code == 200:
@@ -147,7 +197,7 @@ with st.sidebar:
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("\U0001F464 Client / Application View")
+    st.subheader("👤 Client / Application View")
     user_name = st.text_input("Customer Name", "Alice Smith")
     sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
@@ -170,7 +220,7 @@ with col1:
         }
         try:
             res = requests.post(f"{PROXY_URL}/api/records", json=payload)
-            if res.status_code in [200,201]:
+            if res.status_code in [200, 201]:
                 st.session_state["last_record_id"] = res.json().get("id")
                 st.session_state["expiry_time"] = time.time() + ttl
                 st.success(f"Data routed through Proxy with a {selected_ttl} retention policy!")
@@ -180,7 +230,7 @@ with col1:
             st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
 with col2:
-    st.subheader("\U0001F575\uFE0F Hacker View (Target Database)")
+    st.subheader("🕵️ Hacker View (Target Database)")
     st.info("Live peek inside `company_database.db`:")
 
     if st.button("Refresh Database View"):
@@ -201,9 +251,9 @@ st.divider()
 
 # --- Live Expiry & Retrieval Demo ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
-    st.subheader("\u23F1\uFE0F Live Expiry & Retrieval Test")
+    st.subheader("⏱️ Live Expiry & Retrieval Test")
 
-    st.button("\U0001F504 Refresh Timer")
+    st.button("🔄 Refresh Timer")
 
     remaining = int(st.session_state["expiry_time"] - time.time())
 
@@ -226,4 +276,4 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
             else:
                 st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
         except requests.exceptions.ConnectionError:
-             st.error("Cannot connect to Proxy for retrieval.")
+            st.error("Cannot connect to Proxy for retrieval.")
