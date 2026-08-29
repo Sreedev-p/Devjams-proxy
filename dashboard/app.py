@@ -393,7 +393,7 @@ with st.container(border=True, key="view_panel"):
 # --- Live Expiry & Retrieval Demo ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     with st.container(border=True, key="expiry_panel"):
-        st.subheader("⏱️ Live Expiry & Retrieval Test")
+        st.subheader("Live Expiry & Retrieval Test")
 
         st.button("Refresh Timer")
 
