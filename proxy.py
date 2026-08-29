@@ -4,8 +4,7 @@ import asyncio
 import os
 from contextlib import asynccontextmanager
 from typing import Optional
-from typing import Optional
-from fastapi import Header, HTTPException
+
 import httpx
 from fastapi import FastAPI, Request, HTTPException, Response, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,22 +13,20 @@ import vault
 import crypto_engine
 from reaper import run_reaper
 
-# =========================================================
-# CONFIG
-# =========================================================
 TARGET_BACKEND = os.getenv("TARGET_BACKEND", "https://bd2dfb593379b0.lhr.life")
 DEFAULT_TARGET_FIELDS = {"sensitive_data"}
 ADMIN_API_KEY = os.getenv("DATAEXPIRY_ADMIN_KEY", "supersecretadmin")
 
-# =========================================================
-# APP LIFECYCLE
-# =========================================================
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     vault.init_db()
     reaper_task = asyncio.create_task(run_reaper(interval_seconds=2))
-    yield
-    reaper_task.cancel()
+    try:
+        yield
+    finally:
+        reaper_task.cancel()
+
 
 app = FastAPI(lifespan=lifespan, title="DataExpiry Reverse Proxy")
 
@@ -41,9 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# =========================================================
-# HELPERS
-# =========================================================
+
 def get_target_fields() -> set[str]:
     fields = vault.get_config()
     return set(fields) if fields else DEFAULT_TARGET_FIELDS
@@ -52,10 +47,8 @@ def get_target_fields() -> set[str]:
 def verify_admin(x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key")):
     if not x_admin_key:
         raise HTTPException(status_code=401, detail="Missing Admin Key")
-
     if x_admin_key != ADMIN_API_KEY:
         raise HTTPException(status_code=401, detail="Invalid Admin Key")
-
     return True
 
 
@@ -105,15 +98,8 @@ def process_incoming_payload(data):
                             }
                         )
 
-                    dek = crypto_engine.unwrap_dek(
-                        meta["encrypted_dek"],
-                        meta["nonce"]
-                    )
-                    data[k] = crypto_engine.decrypt_payload(
-                        b64_cipher,
-                        b64_nonce,
-                        dek
-                    )
+                    dek = crypto_engine.unwrap_dek(meta["encrypted_dek"], meta["nonce"])
+                    data[k] = crypto_engine.decrypt_payload(b64_cipher, b64_nonce, dek)
 
             elif isinstance(v, (dict, list)):
                 process_incoming_payload(v)
@@ -124,9 +110,7 @@ def process_incoming_payload(data):
 
     return data
 
-# =========================================================
-# ADMIN ENDPOINTS
-# =========================================================
+
 @app.get("/api/admin/config")
 async def admin_get_config():
     return {"active_fields": vault.get_config()}
@@ -144,19 +128,14 @@ async def admin_update_config(request: Request):
 async def admin_get_logs(limit: int = 200):
     logs = vault.get_audit_logs(limit=limit)
     summary = vault.get_audit_summary()
-    return {
-        "summary": summary,
-        "logs": logs
-    }
+    return {"summary": summary, "logs": logs}
 
 
 @app.get("/api/admin/stats", dependencies=[Depends(verify_admin)])
 async def admin_get_stats():
     return vault.get_audit_summary()
 
-# =========================================================
-# MAIN PROXY
-# =========================================================
+
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
 async def proxy_traffic(request: Request, path: str):
     url = f"{TARGET_BACKEND}/{path}"
@@ -175,7 +154,7 @@ async def proxy_traffic(request: Request, path: str):
     headers.pop("host", None)
     headers.pop("content-length", None)
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=15.0) as client:
         try:
             resp = await client.request(
                 method=request.method,
