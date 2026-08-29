@@ -188,10 +188,37 @@ st.markdown(
         max-width: 760px;
     }}
 
-    .section-note {{
+        .section-note {{
         color: {THEME["muted"]};
         font-size: 0.95rem;
         margin-bottom: 0.6rem;
+    }}
+
+    [data-testid="stMetricValue"] {{
+        font-size: 2.3rem !important;
+        line-height: 1.05 !important;
+    }}
+
+    [data-testid="stMetricLabel"] {{
+        color: #B6C2D1 !important;
+        font-size: 0.9rem !important;
+    }}
+
+    .stButton button {{
+        background: #1FB8D1 !important;
+        color: #04131A !important;
+    }}
+
+    .stButton button:hover {{
+        background: #18A7BE !important;
+    }}
+
+    .section-note {{
+        color: #B6C2D1 !important;
+        font-weight: 600;
+    }}
+
+    </style>
     }}
     </style>
     """,
