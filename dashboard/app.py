@@ -234,10 +234,10 @@ st.markdown(
         backdrop-filter: blur(20px);
         border: 1px solid {THEME["border"]};
         border-radius: 20px;
-        padding: 28px 30px;
-        margin-bottom: 1.25rem;
+        padding: 28px 30px 40px 30px;
+        margin-bottom: 2.5rem;
         position: relative;
-        overflow: hidden;
+        overflow: visible;
     }}
 
     .hero-card::before {{
@@ -271,6 +271,89 @@ st.markdown(
         margin-top: 0.5rem;
         margin-bottom: 0.5rem;
         position: relative;
+    }}
+
+    .hero-title .accent-word {{
+        color: {THEME["accent_soft"]};
+        font-style: italic;
+        font-weight: 600;
+    }}
+
+    /* Floating status chip that overlaps the hero card's bottom edge —
+       breaks the "everything is a flat bordered rectangle" pattern. */
+    .status-chip {{
+        position: absolute;
+        bottom: -16px;
+        left: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: {THEME["surface_solid"]};
+        border: 1px solid {THEME["border_strong"]};
+        border-radius: 999px;
+        padding: 8px 16px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: {THEME["text"]};
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+        z-index: 2;
+    }}
+
+    .status-dot {{
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: {THEME["success"]};
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+        animation: pulse-dot 2s infinite;
+    }}
+
+    @keyframes pulse-dot {{
+        0% {{ box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }}
+        70% {{ box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }}
+        100% {{ box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }}
+    }}
+
+    /* --- Flat inline stat strip: replaces identical bordered metric
+       cards with a single row separated by hairlines, so not every
+       section on the page reads as the same repeated rectangle. --- */
+    .stat-strip {{
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        border: 1px solid {THEME["border"]};
+        border-radius: 14px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }}
+
+    .stat-strip-item {{
+        flex: 1;
+        padding: 14px 20px;
+        border-right: 1px solid {THEME["border"]};
+    }}
+
+    .stat-strip-item:last-child {{
+        border-right: none;
+    }}
+
+    .stat-strip-label {{
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: {THEME["muted"]};
+        margin-bottom: 4px;
+    }}
+
+    .stat-strip-value {{
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: {THEME["text"]};
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }}
 
     .hero-sub {{
@@ -321,10 +404,14 @@ def hero():
         """
         <div class="hero-card">
             <div class="hero-eyebrow">DataExpiry Platform</div>
-            <div class="hero-title">Zero-Code Cryptographic Erasure</div>
+            <div class="hero-title">Zero-Code <span class="accent-word">Cryptographic</span> Erasure</div>
             <div class="hero-sub">
                 Protect sensitive data in transit, enforce retention policies,
                 and demonstrate irreversible key shredding with a clearer, more product-like interface.
+            </div>
+            <div class="status-chip">
+                <span class="status-dot"></span>
+                Reaper daemon active — scanning every 2s
             </div>
         </div>
         """,
@@ -341,11 +428,27 @@ def top_nav():
     )
 
 
+def stat_strip(items):
+    """Render a flat inline stat row (label + value pairs) separated by
+    hairlines, instead of N identical bordered metric cards."""
+    cells = "".join(
+        f"""
+        <div class="stat-strip-item">
+            <div class="stat-strip-label">{label}</div>
+            <div class="stat-strip-value">{value}</div>
+        </div>
+        """
+        for label, value in items
+    )
+    st.markdown(f'<div class="stat-strip">{cells}</div>', unsafe_allow_html=True)
+
+
 def render_overview_metrics():
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Protection Mode", "Active")
-    col2.metric("Policy Engine", "Online")
-    col3.metric("Vault Status", "Healthy")
+    stat_strip([
+        ("Protection Mode", '<span class="status-dot"></span>Active'),
+        ("Policy Engine", "Online"),
+        ("Vault Status", "Healthy"),
+    ])
 
 
 def protected_intake():
@@ -470,10 +573,11 @@ def exposure_test():
     st.subheader("Exposure Test")
     st.caption("Inspect what the target database reveals without proxy-side decryption.")
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("View Type", "Backend Exposure")
-    c2.metric("Expected Risk", "High")
-    c3.metric("Payload Readability", "Masked / Encrypted")
+    stat_strip([
+        ("View Type", "Backend Exposure"),
+        ("Expected Risk", '<span class="status-dot" style="background:{danger}"></span>High'.replace("{danger}", THEME["danger"])),
+        ("Payload Readability", "Masked / Encrypted"),
+    ])
 
     with st.container(border=True):
         st.markdown('<div class="section-note">Exposed records</div>', unsafe_allow_html=True)
@@ -504,10 +608,11 @@ def policy_control():
     st.subheader("Policy Control")
     st.caption("Configure which fields the proxy encrypts before data reaches the target system.")
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Admin Scope", "Encryption Policy")
-    c2.metric("Editable Fields", len(st.session_state.encrypt_fields))
-    c3.metric("Mode", "Live Config")
+    stat_strip([
+        ("Admin Scope", "Encryption Policy"),
+        ("Editable Fields", str(len(st.session_state.encrypt_fields))),
+        ("Mode", "Live Config"),
+    ])
 
     with st.container(border=True):
         st.markdown('<div class="section-note">Administrative policy settings</div>', unsafe_allow_html=True)
