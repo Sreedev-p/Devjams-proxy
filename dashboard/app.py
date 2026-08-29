@@ -218,6 +218,72 @@ st.markdown(f"""
     .stCaption, [data-testid="stCaptionContainer"] {{
         font-family: 'JetBrains Mono', monospace !important;
         color: {THEME["muted"]} !important;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        font-size: 12px !important;
+    }}
+
+    /* ===== View switcher: turn st.radio into a premium pill toggle, ===== */
+    /* ===== not the default Streamlit radio look.                    ===== */
+    .st-key-view_selector div[role="radiogroup"] {{
+        display: inline-flex;
+        gap: 4px;
+        background-color: {THEME["surface_alt"]};
+        border: 1px solid {THEME["border"]};
+        border-radius: 999px;
+        padding: 4px;
+    }}
+
+    .st-key-view_selector label {{
+        margin: 0 !important;
+        cursor: pointer;
+    }}
+
+    /* Hide the default circular radio indicator */
+    .st-key-view_selector label > div:first-child {{
+        display: none !important;
+    }}
+
+    /* Style the option text as a pill button */
+    .st-key-view_selector label > div:last-child {{
+        padding: 10px 22px !important;
+        border-radius: 999px !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        color: {THEME["muted"]} !important;
+        white-space: nowrap;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }}
+
+    .st-key-view_selector label:hover > div:last-child {{
+        color: {THEME["text"]} !important;
+    }}
+
+    /* Selected pill - highlighted in the same accent as the primary buttons */
+    .st-key-view_selector label:has(input:checked) > div:last-child {{
+        background-color: {THEME["accent"]} !important;
+        color: {THEME["accent_text"]} !important;
+        box-shadow: {THEME["button_shadow"]};
+    }}
+
+    /* ===== Card panels wrapping each view / the expiry test ===== */
+    .st-key-view_panel,
+    .st-key-expiry_panel {{
+        border-radius: 18px !important;
+    }}
+
+    .st-key-view_panel > div[data-testid="stVerticalBlockBorderWrapper"],
+    .st-key-expiry_panel > div[data-testid="stVerticalBlockBorderWrapper"] {{
+        background-color: {THEME["surface"]} !important;
+        border: 1px solid {THEME["border"]} !important;
+        border-radius: 18px !important;
+        box-shadow: {THEME["card_shadow"]};
+        padding: 1.75rem !important;
+    }}
+
+    .st-key-expiry_panel {{
+        margin-top: 1.5rem;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -266,87 +332,94 @@ with st.sidebar:
         except requests.exceptions.ConnectionError:
             st.warning("Proxy unreachable.")
 
-# --- Main Split-Screen UI ---
-col1, col2 = st.columns(2)
+# --- Switchable View: User View vs Hacker View ---
+st.caption("SWITCH VIEW")
+active_view = st.radio(
+    "View",
+    ["👤 User View", "🕵️ Hacker View"],
+    horizontal=True,
+    label_visibility="collapsed",
+    key="view_selector",
+)
 
-with col1:
-    st.subheader("👤 Client / Application View")
-    user_name = st.text_input("Customer Name", "Alice Smith")
-    sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
+with st.container(border=True, key="view_panel"):
+    if active_view == "👤 User View":
+        st.subheader("👤 Client / Application View")
+        user_name = st.text_input("Customer Name", "Alice Smith")
+        sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
-    ttl_options = {
-        "15 Seconds (Live Pitch Demo)": 15,
-        "30 Seconds (Standard Demo)": 30,
-        "1 Hour (Temporary Cache)": 3600,
-        "24 Hours (Daily Rotation)": 86400,
-        "30 Days (Standard Compliance)": 2592000,
-        "1 Year (Enterprise Archival)": 31536000
-    }
-    selected_ttl = st.selectbox("Data Retention Policy (Time-To-Live)", list(ttl_options.keys()))
-    ttl = ttl_options[selected_ttl]
-
-    if st.button("Submit Sensitive Data"):
-        payload = {
-            "user_name": user_name,
-            "sensitive_data": sensitive_data,
-            "ttl_seconds": ttl
+        ttl_options = {
+            "15 Seconds (Live Pitch Demo)": 15,
+            "30 Seconds (Standard Demo)": 30,
+            "1 Hour (Temporary Cache)": 3600,
+            "24 Hours (Daily Rotation)": 86400,
+            "30 Days (Standard Compliance)": 2592000,
+            "1 Year (Enterprise Archival)": 31536000
         }
-        try:
-            res = requests.post(f"{PROXY_URL}/api/records", json=payload)
-            if res.status_code in [200, 201]:
-                st.session_state["last_record_id"] = res.json().get("id")
-                st.session_state["expiry_time"] = time.time() + ttl
-                st.success(f"Data routed through Proxy with a {selected_ttl} retention policy!")
-            else:
-                st.error(f"Proxy Error: {res.status_code} - {res.text}")
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
+        selected_ttl = st.selectbox("Data Retention Policy (Time-To-Live)", list(ttl_options.keys()))
+        ttl = ttl_options[selected_ttl]
 
-with col2:
-    st.subheader("🕵️ Hacker View (Target Database)")
-    st.info("Live peek inside `company_database.db`:")
-
-    if st.button("Refresh Database View"):
-        try:
-            db_res = requests.get(f"{BACKEND_URL}/api/records")
-            if db_res.status_code == 200:
-                records = db_res.json()
-                if records:
-                    st.json(records)
+        if st.button("Submit Sensitive Data"):
+            payload = {
+                "user_name": user_name,
+                "sensitive_data": sensitive_data,
+                "ttl_seconds": ttl
+            }
+            try:
+                res = requests.post(f"{PROXY_URL}/api/records", json=payload)
+                if res.status_code in [200, 201]:
+                    st.session_state["last_record_id"] = res.json().get("id")
+                    st.session_state["expiry_time"] = time.time() + ttl
+                    st.success(f"Data routed through Proxy with a {selected_ttl} retention policy!")
                 else:
-                    st.write("Database is currently empty.")
-            else:
-                st.error("Failed to read database.")
-        except requests.exceptions.ConnectionError:
-            st.warning("Target backend (port 5000) is not running.")
+                    st.error(f"Proxy Error: {res.status_code} - {res.text}")
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
-st.divider()
+    else:
+        st.subheader("🕵️ Hacker View (Target Database)")
+        st.info("Live peek inside `company_database.db`:")
+
+        if st.button("Refresh Database View"):
+            try:
+                db_res = requests.get(f"{BACKEND_URL}/api/records")
+                if db_res.status_code == 200:
+                    records = db_res.json()
+                    if records:
+                        st.json(records)
+                    else:
+                        st.write("Database is currently empty.")
+                else:
+                    st.error("Failed to read database.")
+            except requests.exceptions.ConnectionError:
+                st.warning("Target backend (port 5000) is not running.")
 
 # --- Live Expiry & Retrieval Demo ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
-    st.subheader("⏱️ Live Expiry & Retrieval Test")
+    with st.container(border=True, key="expiry_panel"):
+        st.subheader("⏱️ Live Expiry & Retrieval Test")
 
-    st.button("🔄 Refresh Timer")
+        st.button("🔄 Refresh Timer")
 
-    remaining = int(st.session_state["expiry_time"] - time.time())
+        remaining = int(st.session_state["expiry_time"] - time.time())
 
-    if remaining > 0:
-        st.warning(f"Key TTL active: {remaining}s remaining before cryptographic shredding...")
-    else:
-        st.error("TTL expired! Cryptographic key has been mathematically shredded in the Vault.")
+        if remaining > 0:
+            st.warning(f"Key TTL active: {remaining}s remaining before cryptographic shredding...")
+        else:
+            st.error("TTL expired! Cryptographic key has been mathematically shredded in the Vault.")
 
-    if st.button("Attempt Decrypted Read via Proxy"):
-        rec_id = st.session_state["last_record_id"]
-        try:
-            fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}")
+        if st.button("Attempt Decrypted Read via Proxy"):
+            rec_id = st.session_state["last_record_id"]
+            try:
+                fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}")
 
-            if fetch_res.status_code == 200:
-                st.success("200 OK: Key active. Decrypted plaintext restored.")
-                st.json(fetch_res.json())
-            elif fetch_res.status_code == 410:
-                st.error("410 Gone: Decryption key permanently erased from Vault.")
-                st.json(fetch_res.json())
-            else:
-                st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to Proxy for retrieval.")
+                if fetch_res.status_code == 200:
+                    st.success("200 OK: Key active. Decrypted plaintext restored.")
+                    st.json(fetch_res.json())
+                elif fetch_res.status_code == 410:
+                    st.error("410 Gone: Decryption key permanently erased from Vault.")
+                    st.json(fetch_res.json())
+                else:
+                    st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot connect to Proxy for retrieval.")
