@@ -297,15 +297,15 @@ BACKEND_URL = "https://thirty-plants-boil.loca.lt"
 st.caption("SWITCH VIEW")
 active_view = st.radio(
     "View",
-    ["👤 User View", "🕵️ Hacker View", "⚙️ Admin View"],
+    ["User View", "Hacker View", "Admin View"],
     horizontal=True,
     label_visibility="collapsed",
     key="view_selector",
 )
 
 with st.container(border=True, key="view_panel"):
-    if active_view == "👤 User View":
-        st.subheader("👤 Client / Application View")
+    if active_view == "User View":
+        st.subheader("Client / Application View")
         user_name = st.text_input("Customer Name", "Alice Smith")
         sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
@@ -337,8 +337,8 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
-    elif active_view == "🕵️ Hacker View":
-        st.subheader("🕵️ Hacker View (Target Database)")
+    elif active_view == "Hacker View":
+        st.subheader("Hacker View (Target Database)")
         st.info("Live peek inside `company_database.db`:")
 
         if st.button("Refresh Database View"):
@@ -356,7 +356,7 @@ with st.container(border=True, key="view_panel"):
                 st.warning("Target backend (port 5000) is not running.")
 
     else:
-        st.subheader("⚙️ Enterprise DLP Config")
+        st.subheader("Enterprise DLP Config")
 
         st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
 
@@ -380,7 +380,7 @@ with st.container(border=True, key="view_panel"):
         st.divider()
 
         # Read-only live view of current active fields (no auth required)
-        if st.button("🔄 View Current Active Fields"):
+        if st.button("View Current Active Fields"):
             try:
                 cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
                 if cfg_res.status_code == 200:
@@ -395,7 +395,7 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     with st.container(border=True, key="expiry_panel"):
         st.subheader("⏱️ Live Expiry & Retrieval Test")
 
-        st.button("🔄 Refresh Timer")
+        st.button("Refresh Timer")
 
         remaining = int(st.session_state["expiry_time"] - time.time())
 
