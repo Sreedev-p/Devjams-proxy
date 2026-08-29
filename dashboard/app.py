@@ -154,6 +154,13 @@ st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 PROXY_URL = "https://6e3319dd2e30ff.lhr.life"
 BACKEND_URL = "https://bd2dfb593379b0.lhr.life"
 
+# BYPASS HEADERS to prevent Localtunnel HTML warning screens from crashing the JSON parser
+TUNNEL_HEADERS = {
+    "Bypass-Tunnel-Reminder": "true",
+    "ngrok-skip-browser-warning": "true",
+    "User-Agent": "DataExpiry-App/1.0"
+}
+
 # =========================================================
 # SIDEBAR: Enterprise DLP Admin Config Panel
 # =========================================================
@@ -166,7 +173,8 @@ with st.sidebar:
     target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
 
     if st.button("Apply Security Policies"):
-        headers = {"X-Admin-Key": admin_key}
+        # Merges the admin key with the tunnel bypass headers
+        headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
         payload = {"fields": target_fields}
         try:
             res = requests.post(f"{PROXY_URL}/api/admin/config", json=payload, headers=headers)
@@ -183,7 +191,7 @@ with st.sidebar:
 
     if st.button("🔄 View Current Active Fields"):
         try:
-            cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
+            cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", headers=TUNNEL_HEADERS)
             if cfg_res.status_code == 200:
                 st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
             else:
@@ -217,7 +225,7 @@ with col1:
             "ttl_seconds": ttl
         }
         try:
-            res = requests.post(f"{PROXY_URL}/api/records", json=payload)
+            res = requests.post(f"{PROXY_URL}/api/records", json=payload, headers=TUNNEL_HEADERS)
             if res.status_code in [200, 201]:
                 st.session_state["last_record_id"] = res.json().get("id")
                 st.session_state["expiry_time"] = time.time() + ttl
@@ -233,7 +241,7 @@ with col2:
 
     if st.button("Refresh Database View"):
         try:
-            db_res = requests.get(f"{BACKEND_URL}/api/records")
+            db_res = requests.get(f"{BACKEND_URL}/api/records", headers=TUNNEL_HEADERS)
             if db_res.status_code == 200:
                 records = db_res.json()
                 if records:
@@ -258,7 +266,7 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     if st.button("Attempt Decrypted Read via Proxy"):
         rec_id = st.session_state["last_record_id"]
         try:
-            fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}")
+            fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
 
             if fetch_res.status_code == 200:
                 st.success("200 OK: Key active. Decrypted plaintext restored.")
@@ -274,17 +282,39 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     # 3. Execute the Live Countdown Loop at the absolute bottom of the script
     remaining = int(st.session_state["expiry_time"] - time.time())
 
-    if remaining > 0:
-        if remaining <= 60: 
-            # Live ticking animation for short demo durations
-            while remaining > 0:
+    # --- Live Expiry & Retrieval Demo ---
+    if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
+        st.subheader("⏱️ Live Expiry & Retrieval Test")
+
+        timer_placeholder = st.empty()
+        action_placeholder = st.empty()
+
+        with action_placeholder.container():
+            if st.button("Attempt Decrypted Read via Proxy"):
+                rec_id = st.session_state["last_record_id"]
+                try:
+                    fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
+
+                    if fetch_res.status_code == 200:
+                        st.success("200 OK: Key active. Decrypted plaintext restored.")
+                        st.json(fetch_res.json())
+                    elif fetch_res.status_code == 410:
+                        st.error("410 Gone: Decryption key permanently erased from Vault.")
+                        st.json(fetch_res.json())
+                    else:
+                        st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
+                except requests.exceptions.ConnectionError:
+                    st.error("Cannot connect to Proxy for retrieval.")
+
+        # 3. Thread-Safe Live Countdown Loop
+        remaining = int(st.session_state["expiry_time"] - time.time())
+
+        if remaining > 0:
+            if remaining <= 60: 
                 timer_placeholder.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
                 time.sleep(1)
-                remaining = int(st.session_state["expiry_time"] - time.time())
-            
-            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+                st.rerun() # Safely restarts the script from the top to update the UI
+            else:
+                timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
         else:
-            # Static view for long TTLs to prevent infinite loop locking
-            timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
-    else:
-        timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
