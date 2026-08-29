@@ -449,6 +449,47 @@ def policy_control():
 
         admin_key = st.text_input("Admin API key", type="password", key="admin_key_input")
 
+        # --- Admin key verification gate ---
+        # Editing fields (or enforcing policy) requires a key that has
+        # actually been checked against the proxy — not just typed in.
+        # If the key text changes after verification, is_verified drops
+        # back to False automatically since it re-checks equality below.
+        if "admin_verified_key" not in st.session_state:
+            st.session_state.admin_verified_key = None
+
+        is_verified = (
+            admin_key != ""
+            and st.session_state.admin_verified_key == admin_key
+        )
+
+        verify_col, status_col = st.columns([1, 3])
+        with verify_col:
+            if st.button("Verify Admin Key", use_container_width=True, disabled=not admin_key):
+                try:
+                    check_res = requests.get(
+                        f"{PROXY_URL}/api/admin/logs",
+                        headers={"X-Admin-Key": admin_key, **TUNNEL_HEADERS},
+                        timeout=20,
+                    )
+                    if check_res.status_code == 200:
+                        st.session_state.admin_verified_key = admin_key
+                        st.rerun()
+                    elif check_res.status_code == 401:
+                        st.session_state.admin_verified_key = None
+                        st.error("Invalid admin key.")
+                    else:
+                        st.session_state.admin_verified_key = None
+                        st.error(f"Could not verify key: {check_res.status_code}")
+                except requests.RequestException as e:
+                    st.session_state.admin_verified_key = None
+                    st.error(f"Verification failed: {e}")
+
+        with status_col:
+            if is_verified:
+                st.success("Key verified — policy fields unlocked.")
+            else:
+                st.info("Enter and verify your Admin API key to edit encrypted fields.")
+
         st.write("**Fields to encrypt**")
 
         fields_to_remove = None
@@ -460,12 +501,18 @@ def policy_control():
                     value=value,
                     key=f"encrypt_field_{idx}",
                     placeholder="e.g. sensitive_data",
+                    disabled=not is_verified,
                 )
             with col_b:
                 st.write("")
                 st.write("")
                 if len(st.session_state.encrypt_fields) > 1:
-                    if st.button("Remove", key=f"remove_field_{idx}", use_container_width=True):
+                    if st.button(
+                        "Remove",
+                        key=f"remove_field_{idx}",
+                        use_container_width=True,
+                        disabled=not is_verified,
+                    ):
                         fields_to_remove = idx
 
         if fields_to_remove is not None:
@@ -474,7 +521,7 @@ def policy_control():
 
         left, right = st.columns([1, 1])
         with left:
-            if st.button("Add Field", use_container_width=True):
+            if st.button("Add Field", use_container_width=True, disabled=not is_verified):
                 st.session_state.encrypt_fields.append("")
                 st.rerun()
 
@@ -483,7 +530,7 @@ def policy_control():
         )
 
         with right:
-            if st.button("Enforce Policy", use_container_width=True):
+            if st.button("Enforce Policy", use_container_width=True, disabled=not is_verified):
                 headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
                 payload = {"fields": target_fields}
                 try:
@@ -497,6 +544,7 @@ def policy_control():
                         st.success(f"Active fields: {res.json().get('active_fields')}")
                     elif res.status_code == 401:
                         st.error("Invalid admin key.")
+                        st.session_state.admin_verified_key = None
                     else:
                         st.error(f"Unexpected error: {res.status_code} — {res.text}")
                 except requests.RequestException as e:
