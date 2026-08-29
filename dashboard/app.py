@@ -29,12 +29,12 @@ if bg_base64:
         background-attachment: fixed;
     """
 else:
-    bg_css = "background-color: #000000;"
+    bg_css = "background-color: #050505;"
 
-# --- CUSTOM THEME (CSS INJECTION) - FIXED ---
+# --- CUSTOM THEME (CSS INJECTION) - PREMIUM SAAS UPDATE ---
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
     [data-testid="stAppViewContainer"] {{
         {bg_css}
@@ -47,7 +47,7 @@ st.markdown(f"""
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.45);
+        background-color: rgba(5, 5, 5, 0.95); 
         z-index: 0;
         pointer-events: none;
     }}
@@ -61,68 +61,91 @@ st.markdown(f"""
         background-color: rgba(0, 0, 0, 0);
     }}
 
-    /* Global font sizing - reasonable defaults */
-    .stApp {{
-        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-size: 16px !important;
+    .stApp, p, span, label, div {{
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 15px !important;
         letter-spacing: -0.1px;
     }}
 
     .stApp h1 {{
-        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 700 !important;
-        letter-spacing: -1.2px;
-        font-size: 2.5rem !important;
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 500 !important;
+        color: #ffffff !important;
+        letter-spacing: -0.5px;
+        font-size: 2.8rem !important;
         margin-bottom: 1.5rem !important;
     }}
 
     .stApp h2 {{
-        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 600 !important;
-        letter-spacing: -0.8px;
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 500 !important;
+        color: #ffffff !important;
+        letter-spacing: -0.5px;
         font-size: 1.75rem !important;
         margin-bottom: 1rem !important;
     }}
 
     .stApp h3 {{
-        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        font-weight: 600 !important;
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 500 !important;
+        color: #ffffff !important;
         letter-spacing: -0.5px;
         font-size: 1.25rem !important;
     }}
 
-    /* Input fields */
     .stTextInput input {{
+        background-color: #0a0a0a !important;
+        border: 1px solid #2a2a2a !important;
+        color: #ffffff !important;
+        border-radius: 6px !important;
+        font-family: 'Inter', sans-serif !important;
+        padding: 12px 16px !important;
         font-size: 14px !important;
-        font-family: 'Manrope', sans-serif !important;
-        padding: 10px 12px !important;
+        transition: border-color 0.2s ease;
     }}
 
-    .stSelectbox {{
+    .stTextInput input:focus {{
+        border-color: #ffffff !important;
+    }}
+
+    .stSelectbox div[data-baseweb="select"] {{
+        background-color: #0a0a0a !important;
+        border: 1px solid #2a2a2a !important;
+        color: #ffffff !important;
+        border-radius: 6px !important;
+        font-family: 'Inter', sans-serif !important;
         font-size: 14px !important;
     }}
 
-    /* Buttons */
     .stButton button {{
-        font-family: 'Space Grotesk', sans-serif !important;
-        font-weight: 600 !important;
-        letter-spacing: -0.2px;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border-radius: 50px !important; 
+        border: none !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
         font-size: 14px !important;
-        padding: 10px 20px !important;
+        padding: 10px 24px !important;
+        transition: all 0.2s ease !important;
+    }}
+    
+    .stButton button:hover {{
+        background-color: #e0e0e0 !important;
+        transform: translateY(-1px);
     }}
 
-    /* Alerts & Messages */
     div[data-testid="stAlert"] {{
-        background-color: rgba(17, 17, 17, 0.85);
-        border: 1px solid #333333;
-        border-radius: 8px;
+        background-color: #0a0a0a !important;
+        border: 1px solid #222222 !important;
+        border-radius: 6px !important;
+        color: #d1d1d1 !important;
         padding: 16px !important;
         font-size: 14px !important;
     }}
 
-    /* Sidebar specific */
     [data-testid="stSidebar"] {{
-        background-color: rgba(17, 17, 17, 0.9);
+        background-color: #050505 !important;
+        border-right: 1px solid #1a1a1a !important;
     }}
 
     [data-testid="stSidebar"] .stTextInput input {{
@@ -137,12 +160,11 @@ st.markdown(f"""
         font-size: 1.5rem !important;
     }}
 
-    /* Divider */
     hr {{
-        margin: 2rem 0 !important;
+        border-color: #222222 !important;
+        margin: 3rem 0 !important;
     }}
 
-    /* JSON display */
     .stJson {{
         font-size: 13px !important;
     }}
@@ -173,7 +195,6 @@ with st.sidebar:
     target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
 
     if st.button("Apply Security Policies"):
-        # Merges the admin key with the tunnel bypass headers
         headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
         payload = {"fields": target_fields}
         try:
@@ -199,7 +220,9 @@ with st.sidebar:
         except requests.exceptions.ConnectionError:
             st.warning("Proxy unreachable.")
 
-# --- Main Split-Screen UI ---
+# =========================================================
+# MAIN UI: Split-Screen View
+# =========================================================
 col1, col2 = st.columns(2)
 
 with col1:
@@ -255,66 +278,41 @@ with col2:
 
 st.divider()
 
-# --- Live Expiry & Retrieval Demo ---
+# =========================================================
+# LIVE EXPIRY & RETRIEVAL DEMO
+# =========================================================
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     st.subheader("⏱️ Live Expiry & Retrieval Test")
 
-    # 1. Create the placeholder FIRST so it renders above the buttons
     timer_placeholder = st.empty()
+    action_placeholder = st.empty()
 
-    # 2. Render the Action Button (visible and clickable while timer runs)
-    if st.button("Attempt Decrypted Read via Proxy"):
-        rec_id = st.session_state["last_record_id"]
-        try:
-            fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
+    with action_placeholder.container():
+        if st.button("Attempt Decrypted Read via Proxy"):
+            rec_id = st.session_state["last_record_id"]
+            try:
+                fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
 
-            if fetch_res.status_code == 200:
-                st.success("200 OK: Key active. Decrypted plaintext restored.")
-                st.json(fetch_res.json())
-            elif fetch_res.status_code == 410:
-                st.error("410 Gone: Decryption key permanently erased from Vault.")
-                st.json(fetch_res.json())
-            else:
-                st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to Proxy for retrieval.")
+                if fetch_res.status_code == 200:
+                    st.success("200 OK: Key active. Decrypted plaintext restored.")
+                    st.json(fetch_res.json())
+                elif fetch_res.status_code == 410:
+                    st.error("410 Gone: Decryption key permanently erased from Vault.")
+                    st.json(fetch_res.json())
+                else:
+                    st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot connect to Proxy for retrieval.")
 
-    # 3. Execute the Live Countdown Loop at the absolute bottom of the script
+    # Thread-Safe Live Countdown Loop
     remaining = int(st.session_state["expiry_time"] - time.time())
 
-    # --- Live Expiry & Retrieval Demo ---
-    if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
-        st.subheader("⏱️ Live Expiry & Retrieval Test")
-
-        timer_placeholder = st.empty()
-        action_placeholder = st.empty()
-
-        with action_placeholder.container():
-            if st.button("Attempt Decrypted Read via Proxy"):
-                rec_id = st.session_state["last_record_id"]
-                try:
-                    fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
-
-                    if fetch_res.status_code == 200:
-                        st.success("200 OK: Key active. Decrypted plaintext restored.")
-                        st.json(fetch_res.json())
-                    elif fetch_res.status_code == 410:
-                        st.error("410 Gone: Decryption key permanently erased from Vault.")
-                        st.json(fetch_res.json())
-                    else:
-                        st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
-                except requests.exceptions.ConnectionError:
-                    st.error("Cannot connect to Proxy for retrieval.")
-
-        # 3. Thread-Safe Live Countdown Loop
-        remaining = int(st.session_state["expiry_time"] - time.time())
-
-        if remaining > 0:
-            if remaining <= 60: 
-                timer_placeholder.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
-                time.sleep(1)
-                st.rerun() # Safely restarts the script from the top to update the UI
-            else:
-                timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
+    if remaining > 0:
+        if remaining <= 60: 
+            timer_placeholder.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
+            time.sleep(1)
+            st.rerun() # Safely restarts the script from the top to update the UI
         else:
-            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+            timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
+    else:
+        timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
