@@ -181,7 +181,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
+st.title("DataExpiry: Zero-Code Cryptographic Erasure")
 
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
 BACKEND_URL = "https://thirty-plants-boil.loca.lt"
@@ -197,15 +197,15 @@ TUNNEL_HEADERS = {
 st.caption("SWITCH VIEW")
 active_view = st.radio(
     "View",
-    ["👤 User View", "🕵️ Hacker View", "⚙️ Admin View", "📊 SOC Dashboard"],
+    ["User View", "Hacker View", "Admin View", "SOC Dashboard"],
     horizontal=True,
     label_visibility="collapsed",
     key="view_selector",
 )
 
 with st.container(border=True, key="view_panel"):
-    if active_view == "👤 User View":
-        st.subheader("👤 Client / Application View")
+    if active_view == "User View":
+        st.subheader("Client / Application View")
         user_name = st.text_input("Customer Name", "Alice Smith")
         sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
 
@@ -255,8 +255,8 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.warning("Target backend (port 5000) is not running.")
 
-    elif active_view == "📊 SOC Dashboard":
-        st.subheader("📊 Security Operations Center (SIEM)")
+    elif active_view == "SOC Dashboard":
+        st.subheader("Security Operations Center (SIEM)")
         st.caption("Live immutable audit trail of all cryptographic proxy events.")
 
         soc_key = st.text_input("Admin API Key", type="password", key="soc_admin_key")
@@ -277,7 +277,7 @@ with st.container(border=True, key="view_panel"):
                     col3.metric("Decryption Attempts", summary.get("decryption_attempts", 0))
 
                     st.divider()
-                    st.write("### 📜 Immutable Event Ledger")
+                    st.write("### Immutable Event Ledger")
                     if logs:
                         st.dataframe(logs, use_container_width=True)
                     else:
@@ -290,7 +290,7 @@ with st.container(border=True, key="view_panel"):
                 st.error("Cannot connect to Proxy.")
 
     else:
-        st.subheader("⚙️ Enterprise DLP Config")
+        st.subheader("Enterprise DLP Config")
         st.caption("Configure which JSON fields the proxy encrypts on the fly.")
 
         # Admin key box no longer stretches the full panel width — a
@@ -377,7 +377,7 @@ with st.container(border=True, key="view_panel"):
                 st.error("Cannot reach proxy — is it running?")
 
         st.divider()
-        if st.button("🔄 View Current Active Fields"):
+        if st.button("View Current Active Fields"):
             try:
                 cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", headers=TUNNEL_HEADERS)
                 if cfg_res.status_code == 200:
@@ -390,7 +390,7 @@ with st.container(border=True, key="view_panel"):
 # --- RESTORED: Live Expiry & Retrieval Demo (With thread-safe st.rerun loop) ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     with st.container(border=True, key="expiry_panel"):
-        st.subheader("⏱️ Live Expiry & Retrieval Test")
+        st.subheader("Live Expiry & Retrieval Test")
 
         timer_placeholder = st.empty()
         action_placeholder = st.empty()
@@ -423,4 +423,4 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
             else:
                 timer_placeholder.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
         else:
-            timer_placeholder.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+            timer_placeholder.error("**TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
