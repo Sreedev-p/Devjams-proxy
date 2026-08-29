@@ -16,7 +16,7 @@ from reaper import run_reaper
 # =========================================================
 # CONFIG
 # =========================================================
-TARGET_BACKEND = os.getenv("TARGET_BACKEND", "http://localhost:5000")
+TARGET_BACKEND = os.getenv("TARGET_BACKEND", "https://bd2dfb593379b0.lhr.life")
 DEFAULT_TARGET_FIELDS = {"sensitive_data"}
 ADMIN_API_KEY = os.getenv("DATAEXPIRY_ADMIN_KEY", "supersecretadmin")
 
