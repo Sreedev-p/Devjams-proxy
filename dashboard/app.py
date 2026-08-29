@@ -31,10 +31,10 @@ if bg_base64:
 else:
     bg_css = "background-color: #050505;"
 
-# --- PREMIUM SAAS THEME (CSS INJECTION) ---
+# --- CUSTOM THEME (CSS INJECTION) - PREMIUM SAAS UPDATE ---
 st.markdown(f"""
     <style>
-    /* Import Premium Fonts: Playfair Display for elegant headers, Inter for clean UI text */
+    /* Import Premium Fonts: Playfair Display for headers, Inter for UI text */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
     [data-testid="stAppViewContainer"] {{
@@ -63,45 +63,63 @@ st.markdown(f"""
         background-color: rgba(0, 0, 0, 0);
     }}
 
-    /* Sidebar - Very dark charcoal to separate slightly from main body */
-    [data-testid="stSidebar"] {{
-        background-color: #050505 !important;
-        border-right: 1px solid #1a1a1a !important;
-    }}
-
-    /* Typography - Body */
+    /* Global font sizing - Inter */
     .stApp, p, span, label, div {{
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-size: 15px !important;
         letter-spacing: -0.1px;
     }}
 
-    /* Typography - Headings (The Editorial Serif Look) */
-    h1, h2, h3, h4 {{
+    /* Headings - Playfair Display */
+    .stApp h1 {{
         font-family: 'Playfair Display', serif !important;
         font-weight: 500 !important;
         color: #ffffff !important;
         letter-spacing: -0.5px;
-    }}
-    
-    h1 {{
         font-size: 2.8rem !important;
         margin-bottom: 1.5rem !important;
     }}
 
-    /* Inputs & Select Boxes - Dark, minimal borders */
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] {{
+    .stApp h2 {{
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 500 !important;
+        color: #ffffff !important;
+        letter-spacing: -0.5px;
+        font-size: 1.75rem !important;
+        margin-bottom: 1rem !important;
+    }}
+
+    .stApp h3 {{
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 500 !important;
+        color: #ffffff !important;
+        letter-spacing: -0.5px;
+        font-size: 1.25rem !important;
+    }}
+
+    /* Input fields */
+    .stTextInput input {{
         background-color: #0a0a0a !important;
         border: 1px solid #2a2a2a !important;
         color: #ffffff !important;
         border-radius: 6px !important;
         font-family: 'Inter', sans-serif !important;
         padding: 12px 16px !important;
+        font-size: 14px !important;
         transition: border-color 0.2s ease;
     }}
-    
-    .stTextInput input:focus, .stSelectbox div[data-baseweb="select"]:focus {{
+
+    .stTextInput input:focus {{
         border-color: #ffffff !important;
+    }}
+
+    .stSelectbox div[data-baseweb="select"] {{
+        background-color: #0a0a0a !important;
+        border: 1px solid #2a2a2a !important;
+        color: #ffffff !important;
+        border-radius: 6px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 14px !important;
     }}
 
     /* Buttons - Premium White Pill Style */
@@ -122,16 +140,46 @@ st.markdown(f"""
         transform: translateY(-1px);
     }}
 
-    /* Alerts & Messages - Stripped of harsh colors, made minimalist */
+    /* Alerts & Messages */
     div[data-testid="stAlert"] {{
         background-color: #0a0a0a !important;
         border: 1px solid #222222 !important;
         border-radius: 6px !important;
         color: #d1d1d1 !important;
         padding: 16px !important;
+        font-size: 14px !important;
     }}
 
-    /* Tab Styling - Clean underlines */
+    /* Sidebar specific */
+    [data-testid="stSidebar"] {{
+        background-color: #050505 !important;
+        border-right: 1px solid #1a1a1a !important;
+    }}
+
+    [data-testid="stSidebar"] .stTextInput input {{
+        font-size: 13px !important;
+    }}
+
+    [data-testid="stSidebar"] .stMarkdownContainer {{
+        font-size: 14px !important;
+    }}
+
+    [data-testid="stSidebar"] h2 {{
+        font-size: 1.5rem !important;
+    }}
+
+    /* Divider */
+    hr {{
+        border-color: #222222 !important;
+        margin: 3rem 0 !important;
+    }}
+
+    /* JSON display */
+    .stJson {{
+        font-size: 13px !important;
+    }}
+    
+    /* Tab Styling */
     .stTabs [data-baseweb="tab-list"] {{
         background-color: transparent !important;
         border-bottom: 1px solid #222222 !important;
@@ -150,12 +198,6 @@ st.markdown(f"""
         color: #ffffff !important;
         border-bottom: 2px solid #ffffff !important;
         font-weight: 500 !important;
-    }}
-    
-    /* Dividers */
-    hr {{
-        border-color: #222222 !important;
-        margin: 3rem 0 !important;
     }}
     </style>
 """, unsafe_allow_html=True)
