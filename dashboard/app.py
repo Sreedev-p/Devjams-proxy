@@ -509,58 +509,114 @@ def policy_control():
 
         admin_key = st.text_input("Admin API key", type="password", key="admin_key_input")
 
-        st.write("**Fields to encrypt**")
+        # If the key has changed since the last successful verification,
+        # the previous verification no longer applies — require re-checking
+        # before allowing edits again.
+        if admin_key != st.session_state.get("verified_admin_key"):
+            st.session_state.admin_key_verified = False
 
-        fields_to_remove = None
-        for idx, value in enumerate(st.session_state.encrypt_fields):
-            col_a, col_b = st.columns([6, 1])
-            with col_a:
-                st.session_state.encrypt_fields[idx] = st.text_input(
-                    f"Field {idx + 1}",
-                    value=value,
-                    key=f"encrypt_field_{idx}",
-                    placeholder="e.g. sensitive_data",
-                )
-            with col_b:
-                st.write("")
-                st.write("")
-                if len(st.session_state.encrypt_fields) > 1:
-                    if st.button("Remove", key=f"remove_field_{idx}", use_container_width=True):
-                        fields_to_remove = idx
+        verify_col, status_col = st.columns([1, 3])
+        with verify_col:
+            verify_clicked = st.button("Verify Key", use_container_width=True)
 
-        if fields_to_remove is not None:
-            st.session_state.encrypt_fields.pop(fields_to_remove)
-            st.rerun()
-
-        left, right = st.columns([1, 1])
-        with left:
-            if st.button("Add Field", use_container_width=True):
-                st.session_state.encrypt_fields.append("")
-                st.rerun()
-
-        target_fields = ",".join(
-            field.strip() for field in st.session_state.encrypt_fields if field.strip()
-        )
-
-        with right:
-            if st.button("Enforce Policy", use_container_width=True):
-                headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
-                payload = {"fields": target_fields}
+        if verify_clicked:
+            if not admin_key:
+                st.session_state.admin_key_verified = False
+                st.error("Enter an Admin API Key first.")
+            else:
                 try:
-                    res = requests.post(
-                        f"{PROXY_URL}/api/admin/config",
-                        json=payload,
+                    headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
+                    res = requests.get(
+                        f"{PROXY_URL}/api/admin/stats",
                         headers=headers,
                         timeout=20,
                     )
-                    if res.status_code in (200, 201):
-                        st.success(f"Active fields: {res.json().get('active_fields')}")
+                    if res.status_code == 200:
+                        st.session_state.admin_key_verified = True
+                        st.session_state.verified_admin_key = admin_key
                     elif res.status_code == 401:
-                        st.error("Invalid admin key.")
+                        st.session_state.admin_key_verified = False
+                        st.error("Invalid Admin API Key.")
                     else:
-                        st.error(f"Unexpected error: {res.status_code} — {res.text}")
+                        st.session_state.admin_key_verified = False
+                        st.error(f"Unexpected error verifying key: {res.status_code}")
                 except requests.RequestException as e:
+                    st.session_state.admin_key_verified = False
                     st.error(f"Could not reach proxy: {e}")
+
+        is_verified = st.session_state.get("admin_key_verified", False)
+
+        with status_col:
+            st.write("")
+            if is_verified:
+                st.success("Key verified — policy editing unlocked.", icon="✅")
+            else:
+                st.info("Verify your Admin API Key to unlock policy editing.", icon="🔒")
+
+        st.markdown("---")
+
+        if not is_verified:
+            st.caption("Fields to encrypt")
+            st.write(
+                "🔒 Locked. Verify a valid Admin API Key above to view and edit the "
+                "encrypted-fields list."
+            )
+        else:
+            st.write("**Fields to encrypt**")
+
+            fields_to_remove = None
+            for idx, value in enumerate(st.session_state.encrypt_fields):
+                col_a, col_b = st.columns([6, 1])
+                with col_a:
+                    st.session_state.encrypt_fields[idx] = st.text_input(
+                        f"Field {idx + 1}",
+                        value=value,
+                        key=f"encrypt_field_{idx}",
+                        placeholder="e.g. sensitive_data",
+                    )
+                with col_b:
+                    st.write("")
+                    st.write("")
+                    if len(st.session_state.encrypt_fields) > 1:
+                        if st.button("Remove", key=f"remove_field_{idx}", use_container_width=True):
+                            fields_to_remove = idx
+
+            if fields_to_remove is not None:
+                st.session_state.encrypt_fields.pop(fields_to_remove)
+                st.rerun()
+
+            left, right = st.columns([1, 1])
+            with left:
+                if st.button("Add Field", use_container_width=True):
+                    st.session_state.encrypt_fields.append("")
+                    st.rerun()
+
+            target_fields = ",".join(
+                field.strip() for field in st.session_state.encrypt_fields if field.strip()
+            )
+
+            with right:
+                if st.button("Enforce Policy", use_container_width=True):
+                    headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
+                    payload = {"fields": target_fields}
+                    try:
+                        res = requests.post(
+                            f"{PROXY_URL}/api/admin/config",
+                            json=payload,
+                            headers=headers,
+                            timeout=20,
+                        )
+                        if res.status_code in (200, 201):
+                            st.success(f"Active fields: {res.json().get('active_fields')}")
+                        elif res.status_code == 401:
+                            # Key may have been rotated/revoked server-side
+                            # since verification — re-lock the editor.
+                            st.session_state.admin_key_verified = False
+                            st.error("Invalid admin key.")
+                        else:
+                            st.error(f"Unexpected error: {res.status_code} — {res.text}")
+                    except requests.RequestException as e:
+                        st.error(f"Could not reach proxy: {e}")
 
     with st.container(border=True):
         st.markdown('<div class="section-note">Current policy</div>', unsafe_allow_html=True)
