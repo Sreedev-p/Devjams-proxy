@@ -11,14 +11,19 @@ _lock = threading.Lock()
 def get_connection():
     conn = sqlite3.connect(DB_PATH, isolation_level=None, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA secure_delete=ON;")
     conn.execute("PRAGMA busy_timeout=5000;")
+
     return conn
 
 
 def init_db():
     with get_connection() as conn:
+        # =========================================================
+        # CORE CRYPTO VAULT
+        # =========================================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS vault_keys (
                 data_id TEXT PRIMARY KEY,
@@ -31,22 +36,30 @@ def init_db():
                 shredded_at INTEGER
             );
         """)
+
         conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_reaper
             ON vault_keys (status, expires_at);
         """)
 
+        # =========================================================
+        # ADMIN CONFIG
+        # =========================================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS dlp_config (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
                 target_fields TEXT
             );
         """)
+
         conn.execute("""
             INSERT OR IGNORE INTO dlp_config (id, target_fields)
             VALUES (1, 'sensitive_data');
         """)
 
+        # =========================================================
+        # IMMUTABLE AUDIT LOG
+        # =========================================================
         conn.execute("""
             CREATE TABLE IF NOT EXISTS audit_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,19 +69,23 @@ def init_db():
                 details TEXT
             );
         """)
+
         conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_audit_timestamp
             ON audit_logs (timestamp DESC);
         """)
+
         conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_audit_event_type
             ON audit_logs (event_type, timestamp DESC);
         """)
+
         conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_audit_data_id
             ON audit_logs (data_id, timestamp DESC);
         """)
 
+        # Make audit log append-only
         conn.execute("""
             CREATE TRIGGER IF NOT EXISTS trg_audit_no_update
             BEFORE UPDATE ON audit_logs
@@ -76,6 +93,7 @@ def init_db():
                 SELECT RAISE(ABORT, 'audit_logs is append-only');
             END;
         """)
+
         conn.execute("""
             CREATE TRIGGER IF NOT EXISTS trg_audit_no_delete
             BEFORE DELETE ON audit_logs
@@ -102,8 +120,9 @@ def log_event(event_type: str, data_id: str | None = None, details=None):
         """, (ts, event_type, data_id, serialized))
 
 
-# --- CRYPTO OPERATIONS ---
-
+# =========================================================
+# CRYPTO OPERATIONS
+# =========================================================
 def store_key(data_id: str, encrypted_dek: bytes, nonce: bytes, ttl_seconds: int = 10):
     now = int(time.time())
     expires_at = now + ttl_seconds
@@ -145,6 +164,7 @@ def get_key_metadata(data_id: str) -> dict | None:
                 "shredded_at": row["shredded_at"]
             }
         )
+
         return {
             "encrypted_dek": row["encrypted_dek"],
             "nonce": row["dek_nonce"],
@@ -246,6 +266,7 @@ def get_audit_logs(limit: int = 200) -> list[dict]:
             "data_id": row["data_id"],
             "details": details
         })
+
     return results
 
 
@@ -268,11 +289,16 @@ def get_audit_summary() -> dict:
     return counts
 
 
-# --- ADMIN CONFIG OPERATIONS ---
-
+# =========================================================
+# ADMIN CONFIG OPERATIONS
+# =========================================================
 def get_config() -> list[str]:
     with get_connection() as conn:
-        cursor = conn.execute("SELECT target_fields FROM dlp_config WHERE id = 1")
+        cursor = conn.execute("""
+            SELECT target_fields
+            FROM dlp_config
+            WHERE id = 1
+        """)
         row = cursor.fetchone()
 
     if row is None or not row["target_fields"] or not row["target_fields"].strip():
@@ -294,6 +320,7 @@ def update_config(fields_string: str) -> list[str]:
             """, (normalized,))
 
     active_fields = get_config()
+
     log_event(
         "CONFIG_UPDATED",
         None,
@@ -301,4 +328,5 @@ def update_config(fields_string: str) -> list[str]:
             "active_fields": active_fields
         }
     )
+
     return active_fields
