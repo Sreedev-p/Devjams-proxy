@@ -1,21 +1,142 @@
 import streamlit as st
 import requests
 import time
+import base64
+from pathlib import Path
 
+# --- Configuration ---
 st.set_page_config(page_title="DataExpiry Demo", layout="wide")
+
+# --- BACKGROUND IMAGE (base64 embed so it works local or deployed) ---
+BG_IMAGE_PATH = "cyber-background-8k.png"
+
+@st.cache_data
+def get_base64_image(image_path):
+    path = Path(image_path)
+    if not path.exists():
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+bg_base64 = get_base64_image(BG_IMAGE_PATH)
+
+if bg_base64:
+    bg_css = f"""
+        background-image: url("data:image/png;base64,{bg_base64}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    """
+else:
+    # Falls back to pure black if the image file isn't found next to app.py
+    bg_css = "background-color: #000000;"
+
+# --- CUSTOM THEME (CSS INJECTION) ---
+st.markdown(f"""
+    <style>
+    /* Premium font pairing: Space Grotesk for headers (distinctive display font),
+       Manrope for body text (clean, highly readable, premium SaaS feel) */
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+    /* Background image instead of flat black */
+    [data-testid="stAppViewContainer"] {{
+        {bg_css}
+    }}
+
+    /* Slight dark overlay on top of the background image so text/UI stay
+       readable and the image reads as "matte, low contrast" rather than a
+       loud photo behind the content */
+    [data-testid="stAppViewContainer"]::before {{
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.45);
+        z-index: 0;
+        pointer-events: none;
+    }}
+
+    /* Make sure actual page content sits above the overlay */
+    [data-testid="stAppViewContainer"] > .main {{
+        position: relative;
+        z-index: 1;
+    }}
+
+    /* Make the top header transparent */
+    [data-testid="stHeader"] {{
+        background-color: rgba(0, 0, 0, 0);
+    }}
+
+    /* Apply the body font and bump up the base size for presentations */
+    html, body, [class*="css"], [class*="st-"] {{
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 18px !important; 
+        letter-spacing: -0.1px;
+    }}
+
+    /* Headers use the distinctive display font, sharper and bolder */
+    h1, h2, h3, h4 {{
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.8px;
+    }}
+
+    /* Extra weight and tighter spacing on the main title for a premium hero look */
+    h1 {{
+        font-weight: 700 !important;
+        letter-spacing: -1.2px;
+    }}
+
+    /* Ensure input fields and dropdowns match the new font and size */
+    .stTextInput input, .stSelectbox div[data-baseweb="select"] {{
+        font-size: 16px !important;
+        font-family: 'Manrope', sans-serif !important;
+    }}
+
+    /* Buttons use the display font too, for a punchier CTA feel */
+    .stButton button {{
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.2px;
+    }}
+
+    /* Slightly darken the alert boxes, and add a hairline border so they
+       stand out clearly against the busier background image */
+    div[data-testid="stAlert"] {{
+        background-color: rgba(17, 17, 17, 0.85);
+        border: 1px solid #333333;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
 PROXY_URL = "https://c361391c250129.lhr.life"
 BACKEND_URL = "https://6e63d2d51e6eac.lhr.life"
 
+# --- Main Split-Screen UI ---
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("👤 Client / Application View")
     user_name = st.text_input("Customer Name", "Alice Smith")
     sensitive_data = st.text_input("Sensitive Data (e.g. Card / SSN)", "4532-xxxx-xxxx-8891")
-    ttl = st.slider("Time-To-Live (Seconds)", min_value=5, max_value=60, value=10)
+    
+    # Dropdown for professional retention policies
+    ttl_options = {
+        "15 Seconds (Live Pitch Demo)": 15,
+        "30 Seconds (Standard Demo)": 30,
+        "1 Hour (Temporary Cache)": 3600,
+        "24 Hours (Daily Rotation)": 86400,
+        "30 Days (Standard Compliance)": 2592000,
+        "1 Year (Enterprise Archival)": 31536000
+    }
+    selected_ttl = st.selectbox("Data Retention Policy (Time-To-Live)", list(ttl_options.keys()))
+    ttl = ttl_options[selected_ttl]
     
     if st.button("Submit Sensitive Data"):
         payload = {
@@ -28,7 +149,7 @@ with col1:
             if res.status_code == 201:
                 st.session_state["last_record_id"] = res.json().get("id")
                 st.session_state["expiry_time"] = time.time() + ttl
-                st.success("Data securely routed through Proxy!")
+                st.success(f"Data routed through Proxy with a {selected_ttl} retention policy!")
             else:
                 st.error(f"Proxy Error: {res.status_code} - {res.text}")
         except requests.exceptions.ConnectionError:
@@ -58,7 +179,6 @@ st.divider()
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
     st.subheader("⏱️ Live Expiry & Retrieval Test")
     
-    # Allows judges to see the time updating without refreshing the whole page
     st.button("🔄 Refresh Timer")
     
     remaining = int(st.session_state["expiry_time"] - time.time())
