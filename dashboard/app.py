@@ -21,6 +21,11 @@ def get_base64_image(image_path):
 bg_base64 = get_base64_image(BG_IMAGE_PATH)
 
 if bg_base64:
+    bg_css = f"""... background-image ..."""
+else:
+    bg_css = "background-color: #050505;"
+
+if bg_base64:
     bg_css = f"""
         background-image: url("data:image/png;base64,{bg_base64}");
         background-size: cover;
@@ -47,7 +52,7 @@ st.markdown(f"""
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(5, 5, 5, 0.95); 
+        background-color: rgba(5, 5, 5, 0.6); 
         z-index: 0;
         pointer-events: none;
     }}
