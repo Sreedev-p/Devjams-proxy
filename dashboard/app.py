@@ -430,14 +430,18 @@ def top_nav():
 
 def stat_strip(items):
     """Render a flat inline stat row (label + value pairs) separated by
-    hairlines, instead of N identical bordered metric cards."""
+    hairlines, instead of N identical bordered metric cards.
+
+    Built as a single unbroken line with no leading whitespace on any
+    line — Streamlit's markdown renderer follows CommonMark rules, where
+    a line indented 4+ spaces is treated as a literal code block rather
+    than raw HTML, which is what was happening here before.
+    """
     cells = "".join(
-        f"""
-        <div class="stat-strip-item">
-            <div class="stat-strip-label">{label}</div>
-            <div class="stat-strip-value">{value}</div>
-        </div>
-        """
+        f'<div class="stat-strip-item">'
+        f'<div class="stat-strip-label">{label}</div>'
+        f'<div class="stat-strip-value">{value}</div>'
+        f'</div>'
         for label, value in items
     )
     st.markdown(f'<div class="stat-strip">{cells}</div>', unsafe_allow_html=True)
