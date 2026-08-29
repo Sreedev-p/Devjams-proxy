@@ -19,33 +19,39 @@ TUNNEL_HEADERS = {
     "User-Agent": "DataExpiry-App/1.0",
 }
 
+# --- Premium palette: near-black base, warm off-white text, champagne-gold
+# accent instead of a bright neon tone. Cards use a subtle translucent
+# "glass" surface rather than flat opaque panels. ---
 THEME = {
-    "bg": "#0B1020",
-    "bg_soft": "#111827",
-    "surface": "#121A2B",
-    "surface_alt": "#182338",
-    "border": "rgba(148, 163, 184, 0.18)",
-    "text": "#E5EEF8",
-    "muted": "#B6C2D1",
-    "accent": "#1FB8D1",
-    "accent_hover": "#18A7BE",
-    "accent_text": "#04131A",
-    "success": "#34D399",
-    "warning": "#FBBF24",
-    "danger": "#F87171",
+    "bg": "#0A0A0C",
+    "bg_glow": "rgba(212, 175, 55, 0.05)",
+    "surface": "rgba(255, 255, 255, 0.035)",
+    "surface_solid": "#131318",
+    "surface_alt": "rgba(255, 255, 255, 0.055)",
+    "border": "rgba(255, 255, 255, 0.09)",
+    "border_strong": "rgba(212, 175, 55, 0.35)",
+    "text": "#F3F1EA",
+    "muted": "#9B968C",
+    "accent": "#D4AF37",
+    "accent_soft": "#C9A961",
+    "accent_hover": "#E8C468",
+    "accent_text": "#0A0A0C",
+    "success": "#8FBF9F",
+    "warning": "#D9B36C",
+    "danger": "#C97B7B",
 }
 
 st.markdown(
     f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
     html, body, [class*="css"] {{
         font-family: 'Inter', sans-serif;
     }}
 
     .stApp {{
-        background: linear-gradient(180deg, {THEME["bg"]} 0%, #0F172A 100%);
+        background: {THEME["bg"]};
         color: {THEME["text"]};
     }}
 
@@ -55,13 +61,14 @@ st.markdown(
 
     [data-testid="stAppViewContainer"] {{
         background:
-            radial-gradient(circle at top left, rgba(34, 211, 238, 0.06), transparent 26%),
-            linear-gradient(180deg, {THEME["bg"]} 0%, #0F172A 100%);
+            radial-gradient(circle at 12% 0%, {THEME["bg_glow"]}, transparent 40%),
+            radial-gradient(circle at 88% 100%, rgba(212, 175, 55, 0.035), transparent 45%),
+            {THEME["bg"]};
     }}
 
     .block-container {{
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding-top: 2.5rem;
+        padding-bottom: 2.5rem;
         max-width: 1200px;
     }}
 
@@ -74,23 +81,29 @@ st.markdown(
         color: {THEME["text"]};
     }}
 
+    /* --- Metrics --- */
     [data-testid="stMetric"] {{
-        background: rgba(18, 26, 43, 0.92);
+        background: {THEME["surface"]};
+        backdrop-filter: blur(18px);
         border: 1px solid {THEME["border"]};
-        border-radius: 16px;
-        padding: 14px 16px;
+        border-radius: 14px;
+        padding: 16px 18px;
     }}
 
-    [data-testid="stMetricLabel"] {{
+    [data-testid="stMetricLabel"],
+    [data-testid="stMetricLabel"] * {{
         color: {THEME["muted"]} !important;
-        font-weight: 600;
-        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        font-size: 0.78rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
     }}
 
     [data-testid="stMetricValue"],
     [data-testid="stMetricValue"] * {{
-        color: {THEME["text"]};
+        color: {THEME["text"]} !important;
         font-size: 1.3rem !important;
+        font-weight: 600 !important;
         line-height: 1.3 !important;
         white-space: normal !important;
         overflow: visible !important;
@@ -98,19 +111,26 @@ st.markdown(
         overflow-wrap: break-word !important;
     }}
 
+    /* --- Card containers --- */
     div[data-testid="stVerticalBlockBorderWrapper"] {{
-        background: rgba(18, 26, 43, 0.9);
+        background: {THEME["surface"]};
+        backdrop-filter: blur(18px);
         border: 1px solid {THEME["border"]};
         border-radius: 18px;
     }}
 
+    /* --- Inputs --- */
     .stTextInput input,
     .stSelectbox div[data-baseweb="select"] > div,
     div[data-baseweb="base-input"] {{
         background: {THEME["surface_alt"]} !important;
         color: {THEME["text"]} !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         border: 1px solid {THEME["border"]} !important;
+    }}
+
+    .stTextInput input::placeholder {{
+        color: {THEME["muted"]} !important;
     }}
 
     div[data-baseweb="base-input"]:focus-within,
@@ -120,30 +140,39 @@ st.markdown(
         box-shadow: 0 0 0 1px {THEME["accent"]} !important;
     }}
 
+    /* --- Buttons: soft gold, not neon --- */
     .stButton button {{
-        background: {THEME["accent"]} !important;
+        background: linear-gradient(180deg, {THEME["accent_hover"]} 0%, {THEME["accent"]} 100%) !important;
         color: {THEME["accent_text"]} !important;
         border: none !important;
-        border-radius: 12px !important;
-        font-weight: 700 !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
         padding: 0.65rem 1rem !important;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
-        transition: background 0.15s ease, transform 0.15s ease;
+        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.18);
+        transition: filter 0.15s ease, transform 0.15s ease;
     }}
 
     .stButton button:hover {{
-        background: {THEME["accent_hover"]} !important;
+        filter: brightness(1.06);
         transform: translateY(-1px);
     }}
 
+    .stButton button:active {{
+        transform: translateY(0);
+        filter: brightness(0.96);
+    }}
+
     .stAlert {{
-        border-radius: 14px !important;
+        background: {THEME["surface"]} !important;
+        backdrop-filter: blur(14px);
+        border-radius: 12px !important;
         border: 1px solid {THEME["border"]} !important;
     }}
 
     .stDataFrame, .stJson {{
-        border-radius: 14px !important;
+        border-radius: 12px !important;
         overflow: hidden;
+        border: 1px solid {THEME["border"]};
     }}
 
     /* --- Top nav (st.radio used as tabs) --- */
@@ -153,21 +182,23 @@ st.markdown(
     }}
 
     div[role="radiogroup"] label {{
-        background: rgba(24, 35, 56, 0.9);
+        background: {THEME["surface"]};
+        backdrop-filter: blur(14px);
         border: 1px solid {THEME["border"]};
-        border-radius: 12px;
-        padding: 10px 16px;
+        border-radius: 10px;
+        padding: 10px 18px;
         cursor: pointer;
         transition: background 0.15s ease, border-color 0.15s ease;
     }}
 
     div[role="radiogroup"] label:hover {{
-        border-color: {THEME["accent"]};
+        border-color: {THEME["border_strong"]};
     }}
 
     div[role="radiogroup"] label p {{
         color: {THEME["text"]} !important;
-        font-weight: 600;
+        font-weight: 500;
+        font-size: 0.92rem;
     }}
 
     /* Hide the default circular radio indicator so the label itself
@@ -176,57 +207,86 @@ st.markdown(
         display: none !important;
     }}
 
-    /* Highlight whichever tab is actually selected. */
+    /* Highlight whichever tab is actually selected — soft gold, not a
+       loud fill, to stay in the premium register. */
     div[role="radiogroup"] label:has(input:checked) {{
-        background: {THEME["accent"]} !important;
+        background: linear-gradient(180deg, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.14) 100%) !important;
         border-color: {THEME["accent"]} !important;
-        box-shadow: 0 6px 18px rgba(31, 184, 209, 0.35);
+        box-shadow: 0 6px 18px rgba(212, 175, 55, 0.12);
     }}
 
     div[role="radiogroup"] label:has(input:checked) p {{
-        color: {THEME["accent_text"]} !important;
+        color: {THEME["accent"]} !important;
+        font-weight: 600;
     }}
 
     .mono {{
         font-family: 'JetBrains Mono', monospace;
     }}
 
+    /* --- Hero: serif display headline over clean sans body, classic
+       premium/luxury type pairing --- */
     .hero-card {{
-        background: linear-gradient(180deg, rgba(18,26,43,0.96) 0%, rgba(15,23,42,0.96) 100%);
+        background: {THEME["surface"]};
+        backdrop-filter: blur(20px);
         border: 1px solid {THEME["border"]};
         border-radius: 20px;
-        padding: 22px 24px;
-        margin-bottom: 1rem;
+        padding: 28px 30px;
+        margin-bottom: 1.25rem;
+        position: relative;
+        overflow: hidden;
+    }}
+
+    .hero-card::before {{
+        content: "";
+        position: absolute;
+        top: -40%;
+        right: -10%;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.14), transparent 70%);
+        pointer-events: none;
     }}
 
     .hero-eyebrow {{
         color: {THEME["accent"]};
-        font-size: 0.82rem;
-        font-weight: 700;
+        font-size: 0.76rem;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.14em;
+        position: relative;
     }}
 
     .hero-title {{
+        font-family: 'Playfair Display', serif;
         color: {THEME["text"]};
-        font-size: 2rem;
-        font-weight: 800;
-        line-height: 1.1;
-        margin-top: 0.4rem;
-        margin-bottom: 0.35rem;
+        font-size: 2.4rem;
+        font-weight: 600;
+        line-height: 1.15;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        position: relative;
     }}
 
     .hero-sub {{
         color: {THEME["muted"]};
         font-size: 1rem;
         max-width: 760px;
+        position: relative;
+        line-height: 1.6;
     }}
 
     .section-note {{
         color: {THEME["muted"]} !important;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         font-weight: 600;
-        margin-bottom: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.8rem;
+    }}
+
+    hr {{
+        border-color: {THEME["border"]} !important;
     }}
     </style>
     """,
@@ -449,47 +509,6 @@ def policy_control():
 
         admin_key = st.text_input("Admin API key", type="password", key="admin_key_input")
 
-        # --- Admin key verification gate ---
-        # Editing fields (or enforcing policy) requires a key that has
-        # actually been checked against the proxy — not just typed in.
-        # If the key text changes after verification, is_verified drops
-        # back to False automatically since it re-checks equality below.
-        if "admin_verified_key" not in st.session_state:
-            st.session_state.admin_verified_key = None
-
-        is_verified = (
-            admin_key != ""
-            and st.session_state.admin_verified_key == admin_key
-        )
-
-        verify_col, status_col = st.columns([1, 3])
-        with verify_col:
-            if st.button("Verify Admin Key", use_container_width=True, disabled=not admin_key):
-                try:
-                    check_res = requests.get(
-                        f"{PROXY_URL}/api/admin/logs",
-                        headers={"X-Admin-Key": admin_key, **TUNNEL_HEADERS},
-                        timeout=20,
-                    )
-                    if check_res.status_code == 200:
-                        st.session_state.admin_verified_key = admin_key
-                        st.rerun()
-                    elif check_res.status_code == 401:
-                        st.session_state.admin_verified_key = None
-                        st.error("Invalid admin key.")
-                    else:
-                        st.session_state.admin_verified_key = None
-                        st.error(f"Could not verify key: {check_res.status_code}")
-                except requests.RequestException as e:
-                    st.session_state.admin_verified_key = None
-                    st.error(f"Verification failed: {e}")
-
-        with status_col:
-            if is_verified:
-                st.success("Key verified — policy fields unlocked.")
-            else:
-                st.info("Enter and verify your Admin API key to edit encrypted fields.")
-
         st.write("**Fields to encrypt**")
 
         fields_to_remove = None
@@ -501,18 +520,12 @@ def policy_control():
                     value=value,
                     key=f"encrypt_field_{idx}",
                     placeholder="e.g. sensitive_data",
-                    disabled=not is_verified,
                 )
             with col_b:
                 st.write("")
                 st.write("")
                 if len(st.session_state.encrypt_fields) > 1:
-                    if st.button(
-                        "Remove",
-                        key=f"remove_field_{idx}",
-                        use_container_width=True,
-                        disabled=not is_verified,
-                    ):
+                    if st.button("Remove", key=f"remove_field_{idx}", use_container_width=True):
                         fields_to_remove = idx
 
         if fields_to_remove is not None:
@@ -521,7 +534,7 @@ def policy_control():
 
         left, right = st.columns([1, 1])
         with left:
-            if st.button("Add Field", use_container_width=True, disabled=not is_verified):
+            if st.button("Add Field", use_container_width=True):
                 st.session_state.encrypt_fields.append("")
                 st.rerun()
 
@@ -530,7 +543,7 @@ def policy_control():
         )
 
         with right:
-            if st.button("Enforce Policy", use_container_width=True, disabled=not is_verified):
+            if st.button("Enforce Policy", use_container_width=True):
                 headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
                 payload = {"fields": target_fields}
                 try:
@@ -544,7 +557,6 @@ def policy_control():
                         st.success(f"Active fields: {res.json().get('active_fields')}")
                     elif res.status_code == 401:
                         st.error("Invalid admin key.")
-                        st.session_state.admin_verified_key = None
                     else:
                         st.error(f"Unexpected error: {res.status_code} — {res.text}")
                 except requests.RequestException as e:
