@@ -1,0 +1,14 @@
+# Python environments
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Local Databases (Crucial for DataExpiry)
+vault.db
+vault.db-wal
+vault.db-shm
+
+# OS generated files
+.DS_Store
+Thumbs.db
