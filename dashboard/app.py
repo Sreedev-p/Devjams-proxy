@@ -34,6 +34,15 @@ if dark_mode:
         "button_shadow": "0 0 0 1px rgba(245, 208, 51, 0.12), 0 6px 20px rgba(245, 208, 51, 0.16)",
         "button_shadow_hover": "0 0 0 1px rgba(245, 208, 51, 0.2), 0 8px 26px rgba(245, 208, 51, 0.26)",
         "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.35)",
+        "role_user": "#F5D033",
+        "role_user_text": "#14140F",
+        "role_user_shadow": "0 0 0 1px rgba(245, 208, 51, 0.18), 0 6px 20px rgba(245, 208, 51, 0.22)",
+        "role_hacker": "#FF4D5E",
+        "role_hacker_text": "#FFFFFF",
+        "role_hacker_shadow": "0 0 0 1px rgba(255, 77, 94, 0.2), 0 6px 20px rgba(255, 77, 94, 0.26)",
+        "role_admin": "#3E7BFA",
+        "role_admin_text": "#FFFFFF",
+        "role_admin_shadow": "0 0 0 1px rgba(62, 123, 250, 0.2), 0 6px 20px rgba(62, 123, 250, 0.26)",
     }
 else:
     THEME = {
@@ -52,6 +61,15 @@ else:
         "button_shadow": "none",
         "button_shadow_hover": "none",
         "card_shadow": "0 1px 2px rgba(20, 20, 15, 0.04)",
+        "role_user": "#F5D033",
+        "role_user_text": "#14140F",
+        "role_user_shadow": "none",
+        "role_hacker": "#FF4D5E",
+        "role_hacker_text": "#FFFFFF",
+        "role_hacker_shadow": "none",
+        "role_admin": "#3E7BFA",
+        "role_admin_text": "#FFFFFF",
+        "role_admin_shadow": "none",
     }
 
 # --- CUSTOM THEME (CSS INJECTION) - "TEAK-STYLE" REDESIGN, LIGHT + DARK ---
