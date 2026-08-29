@@ -8,8 +8,9 @@ st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 # --- CUSTOM THEME (CSS INJECTION) ---
 st.markdown("""
     <style>
-    /* Import 'Inter' from Google Fonts for a premium, professional look */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    /* Premium font pairing: Space Grotesk for headers (distinctive display font),
+       Manrope for body text (clean, highly readable, premium SaaS feel) */
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
     /* Force background to pure black */
     [data-testid="stAppViewContainer"] {
@@ -21,23 +22,37 @@ st.markdown("""
         background-color: rgba(0, 0, 0, 0);
     }
     
-    /* Apply the professional font and bump up the base size for presentations */
+    /* Apply the body font and bump up the base size for presentations */
     html, body, [class*="css"], [class*="st-"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-size: 18px !important; 
+        letter-spacing: -0.1px;
     }
     
-    /* Make headers sharper and slightly bolder */
+    /* Headers use the distinctive display font, sharper and bolder */
     h1, h2, h3, h4 {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-weight: 600 !important;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.8px;
+    }
+    
+    /* Extra weight and tighter spacing on the main title for a premium hero look */
+    h1 {
+        font-weight: 700 !important;
+        letter-spacing: -1.2px;
     }
     
     /* Ensure input fields and dropdowns match the new font and size */
     .stTextInput input, .stSelectbox div[data-baseweb="select"] {
         font-size: 16px !important;
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Manrope', sans-serif !important;
+    }
+    
+    /* Buttons use the display font too, for a punchier CTA feel */
+    .stButton button {
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.2px;
     }
     
     /* Slightly darken the alert boxes so they look good on pure black */
@@ -50,8 +65,8 @@ st.markdown("""
 
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
-PROXY_URL = "https://2c873f1cfce6a1.lhr.life" # Added the closing quote
-BACKEND_URL = "https://<THE_NEW_URL>.lhr.life" # The tunnel to port 5000
+PROXY_URL = "http://127.0.0.1:8000"
+BACKEND_URL = "http://127.0.0.1:5000" 
 
 # --- Main Split-Screen UI ---
 col1, col2 = st.columns(2)
