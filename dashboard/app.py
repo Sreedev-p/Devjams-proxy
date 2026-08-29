@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import time
 import base64
+import pandas as pd
 from pathlib import Path
 
 # --- Configuration ---
@@ -34,6 +35,15 @@ if dark_mode:
         "button_shadow": "0 0 0 1px rgba(245, 208, 51, 0.12), 0 6px 20px rgba(245, 208, 51, 0.16)",
         "button_shadow_hover": "0 0 0 1px rgba(245, 208, 51, 0.2), 0 8px 26px rgba(245, 208, 51, 0.26)",
         "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.35)",
+        "role_user": "#F5D033",
+        "role_user_text": "#14140F",
+        "role_user_shadow": "0 0 0 1px rgba(245, 208, 51, 0.18), 0 6px 20px rgba(245, 208, 51, 0.22)",
+        "role_hacker": "#FF4D5E",
+        "role_hacker_text": "#FFFFFF",
+        "role_hacker_shadow": "0 0 0 1px rgba(255, 77, 94, 0.2), 0 6px 20px rgba(255, 77, 94, 0.26)",
+        "role_admin": "#3E7BFA",
+        "role_admin_text": "#FFFFFF",
+        "role_admin_shadow": "0 0 0 1px rgba(62, 123, 250, 0.2), 0 6px 20px rgba(62, 123, 250, 0.26)",
     }
 else:
     THEME = {
@@ -52,6 +62,15 @@ else:
         "button_shadow": "none",
         "button_shadow_hover": "none",
         "card_shadow": "0 1px 2px rgba(20, 20, 15, 0.04)",
+        "role_user": "#F5D033",
+        "role_user_text": "#14140F",
+        "role_user_shadow": "none",
+        "role_hacker": "#FF4D5E",
+        "role_hacker_text": "#FFFFFF",
+        "role_hacker_shadow": "none",
+        "role_admin": "#3E7BFA",
+        "role_admin_text": "#FFFFFF",
+        "role_admin_shadow": "none",
     }
 
 # --- CUSTOM THEME (CSS INJECTION) - "TEAK-STYLE" REDESIGN, LIGHT + DARK ---
@@ -204,47 +223,70 @@ st.markdown(f"""
         font-size: 12px !important;
     }}
 
-    /* ===== View switcher: st.segmented_control base styling.  ===== */
-    /* ===== The active-pill highlight is injected separately,  ===== */
-    /* ===== computed in Python from the known selection index  ===== */
-    /* ===== rather than guessed from Streamlit's internal ARIA ===== */
-    /* ===== attributes - see the small <style> block right     ===== */
-    /* ===== after the widget is created.                       ===== */
-    @keyframes viewSwitchSnap {{
-        0% {{ transform: scale(0.94); }}
-        60% {{ transform: scale(1.02); }}
-        100% {{ transform: scale(1); }}
+    /* Metric widgets - used on the SOC Dashboard tab */
+    div[data-testid="stMetric"] {{
+        background-color: {THEME["surface"]} !important;
+        border: 1px solid {THEME["border"]} !important;
+        border-radius: 14px !important;
+        padding: 1rem 1.25rem !important;
+        box-shadow: {THEME["card_shadow"]};
     }}
 
-    @keyframes panelFadeIn {{
-        from {{ opacity: 0; transform: translateY(10px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
+    div[data-testid="stMetricLabel"] {{
+        font-family: 'JetBrains Mono', monospace !important;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: {THEME["muted"]} !important;
     }}
 
-    .st-key-view_selector [data-testid="stSegmentedControl"] {{
+    div[data-testid="stMetricValue"] {{
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-weight: 800 !important;
+        color: {THEME["text"]} !important;
+    }}
+
+    /* ===== View switcher: turn st.radio into a premium pill toggle, ===== */
+    /* ===== not the default Streamlit radio look.                    ===== */
+    .st-key-view_selector div[role="radiogroup"] {{
+        display: inline-flex;
+        gap: 4px;
         background-color: {THEME["surface_alt"]};
         border: 1px solid {THEME["border"]};
         border-radius: 999px;
         padding: 4px;
-        gap: 4px;
     }}
 
-    .st-key-view_selector button {{
-        border: none !important;
-        background-color: transparent !important;
+    .st-key-view_selector label {{
+        margin: 0 !important;
+        cursor: pointer;
+    }}
+
+    /* Hide the default circular radio indicator */
+    .st-key-view_selector label > div:first-child {{
+        display: none !important;
+    }}
+
+    /* Style the option text as a pill button */
+    .st-key-view_selector label > div:last-child {{
+        padding: 10px 22px !important;
         border-radius: 999px !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-weight: 700 !important;
         font-size: 14px !important;
-        padding: 10px 22px !important;
         color: {THEME["muted"]} !important;
         white-space: nowrap;
-        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     }}
 
-    .st-key-view_selector button:hover {{
+    .st-key-view_selector label:hover > div:last-child {{
         color: {THEME["text"]} !important;
-        transform: translateY(-1px);
+    }}
+
+    /* Selected pill - highlighted in the same accent as the primary buttons */
+    .st-key-view_selector label:has(input:checked) > div:last-child {{
+        background-color: {THEME["accent"]} !important;
+        color: {THEME["accent_text"]} !important;
+        box-shadow: {THEME["button_shadow"]};
     }}
 
     /* ===== Card panels wrapping each view / the expiry test ===== */
@@ -260,7 +302,6 @@ st.markdown(f"""
         border-radius: 18px !important;
         box-shadow: {THEME["card_shadow"]};
         padding: 1.75rem !important;
-        animation: panelFadeIn 0.35s ease;
     }}
 
     .st-key-expiry_panel {{
@@ -272,37 +313,26 @@ st.markdown(f"""
 st.title("DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
-PROXY_URL = "https://56d2bcc776805b.lhr.life"
-BACKEND_URL = "https://353bd044ed9e1d.lhr.life"
+PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
+BACKEND_URL = "https://thirty-plants-boil.loca.lt"
 
-# --- Switchable View: User View vs Hacker View vs Admin View ---
+# Bypass headers so ngrok/localtunnel interstitial warning pages don't get
+# returned as HTML in place of JSON and crash res.json() parsing.
+TUNNEL_HEADERS = {
+    "Bypass-Tunnel-Reminder": "true",
+    "ngrok-skip-browser-warning": "true",
+    "User-Agent": "DataExpiry-App/1.0"
+}
+
+# --- Switchable View: User View vs Hacker View vs Admin View vs SOC Dashboard ---
 st.caption("SWITCH VIEW")
-view_options = ["User View", "Hacker View", "Admin View"]
-active_view = st.segmented_control(
+active_view = st.radio(
     "View",
-    view_options,
-    default="User View",
+    ["User View", "Hacker View", "Admin View", "SOC Dashboard"],
+    horizontal=True,
     label_visibility="collapsed",
     key="view_selector",
 )
-if active_view is None:
-    # Single-select segmented_control can be clicked off; fall back to User View
-    active_view = "User View"
-
-# Highlight the active pill by its position (1-indexed for nth-of-type), computed
-# here in Python from the known selection - not guessed from Streamlit's internal
-# ARIA/state attributes, which aren't reliably inspectable ahead of time.
-_active_index = view_options.index(active_view) + 1
-st.markdown(f"""
-    <style>
-    .st-key-view_selector button:nth-of-type({_active_index}) {{
-        background-color: {THEME["accent"]} !important;
-        color: {THEME["accent_text"]} !important;
-        box-shadow: {THEME["button_shadow"]};
-        animation: viewSwitchSnap 0.25s ease;
-    }}
-    </style>
-""", unsafe_allow_html=True)
 
 with st.container(border=True, key="view_panel"):
     if active_view == "User View":
@@ -328,7 +358,7 @@ with st.container(border=True, key="view_panel"):
                 "ttl_seconds": ttl
             }
             try:
-                res = requests.post(f"{PROXY_URL}/api/records", json=payload)
+                res = requests.post(f"{PROXY_URL}/api/records", json=payload, headers=TUNNEL_HEADERS)
                 if res.status_code in [200, 201]:
                     st.session_state["last_record_id"] = res.json().get("id")
                     st.session_state["expiry_time"] = time.time() + ttl
@@ -344,7 +374,7 @@ with st.container(border=True, key="view_panel"):
 
         if st.button("Refresh Database View"):
             try:
-                db_res = requests.get(f"{BACKEND_URL}/api/records")
+                db_res = requests.get(f"{BACKEND_URL}/api/records", headers=TUNNEL_HEADERS)
                 if db_res.status_code == 200:
                     records = db_res.json()
                     if records:
@@ -356,7 +386,7 @@ with st.container(border=True, key="view_panel"):
             except requests.exceptions.ConnectionError:
                 st.warning("Target backend (port 5000) is not running.")
 
-    else:
+    elif active_view == "Admin View":
         st.subheader("Enterprise DLP Config")
 
         st.caption("Configure which JSON fields the proxy encrypts on the fly. Changes are saved permanently in the SQLite vault and apply immediately, no restart needed.")
@@ -365,7 +395,7 @@ with st.container(border=True, key="view_panel"):
         target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
 
         if st.button("Apply Security Policies"):
-            headers = {"X-Admin-Key": admin_key}
+            headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
             payload = {"fields": target_fields}
             try:
                 res = requests.post(f"{PROXY_URL}/api/admin/config", json=payload, headers=headers)
@@ -383,13 +413,87 @@ with st.container(border=True, key="view_panel"):
         # Read-only live view of current active fields (no auth required)
         if st.button("View Current Active Fields"):
             try:
-                cfg_res = requests.get(f"{PROXY_URL}/api/admin/config")
+                cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", headers=TUNNEL_HEADERS)
                 if cfg_res.status_code == 200:
                     st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
                 else:
                     st.warning(f"Could not fetch config: {cfg_res.status_code}")
             except requests.exceptions.ConnectionError:
                 st.warning("Proxy unreachable.")
+
+    else:  # SOC Dashboard
+        st.subheader("SOC Dashboard — Cryptographic Audit Trail")
+        st.caption(
+            "Live security event log from the proxy's immutable audit trail. "
+            "Tracks every KEY_GENERATED, DECRYPTION_ATTEMPT, and KEY_SHREDDED event."
+        )
+
+        # Reuse the Admin key if it was already entered on the Admin tab this
+        # session, otherwise let the user paste it in directly here.
+        default_soc_key = st.session_state.get("admin_key_input", "")
+        soc_admin_key = st.text_input(
+            "Admin API Key",
+            value=default_soc_key,
+            type="password",
+            key="soc_admin_key_input",
+        )
+
+        refresh_col, _ = st.columns([1, 4])
+        with refresh_col:
+            fetch_logs = st.button("🔄 Refresh Logs")
+
+        if fetch_logs:
+            if not soc_admin_key:
+                st.error("Enter the Admin API Key to view the audit trail.")
+            else:
+                headers = {"X-Admin-Key": soc_admin_key, **TUNNEL_HEADERS}
+                try:
+                    logs_res = requests.get(f"{PROXY_URL}/api/admin/logs", headers=headers)
+
+                    if logs_res.status_code == 200:
+                        logs = logs_res.json()
+                        st.session_state["soc_logs"] = logs
+                    elif logs_res.status_code == 401:
+                        st.error("Invalid Admin Key!")
+                        st.session_state.pop("soc_logs", None)
+                    else:
+                        st.error(f"Unexpected error: {logs_res.status_code} - {logs_res.text}")
+                        st.session_state.pop("soc_logs", None)
+                except requests.exceptions.ConnectionError:
+                    st.error("Cannot reach proxy — is it running?")
+
+        logs = st.session_state.get("soc_logs")
+
+        if logs:
+            df = pd.DataFrame(logs)
+
+            # Normalize event-type column name in case the backend uses a
+            # different key (e.g. "event_type" vs "event")
+            event_col = "event_type" if "event_type" in df.columns else (
+                "event" if "event" in df.columns else None
+            )
+
+            key_generated = int((df[event_col] == "KEY_GENERATED").sum()) if event_col else 0
+            decryption_attempts = int((df[event_col] == "DECRYPTION_ATTEMPT").sum()) if event_col else 0
+            key_shredded = int((df[event_col] == "KEY_SHREDDED").sum()) if event_col else 0
+
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Total Events", len(df))
+            m2.metric("Keys Generated", key_generated)
+            m3.metric("Decryption Attempts", decryption_attempts)
+            m4.metric("Keys Shredded", key_shredded)
+
+            st.divider()
+            st.caption("EVENT LEDGER")
+
+            # Show newest events first if there's a timestamp-like column
+            ts_col = next((c for c in df.columns if "time" in c.lower()), None)
+            if ts_col:
+                df = df.sort_values(by=ts_col, ascending=False)
+
+            st.dataframe(df, use_container_width=True, hide_index=True)
+        else:
+            st.info("No logs loaded yet. Enter the Admin API Key and click **Refresh Logs**.")
 
 # --- Live Expiry & Retrieval Demo ---
 if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
@@ -408,7 +512,7 @@ if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
         if st.button("Attempt Decrypted Read via Proxy"):
             rec_id = st.session_state["last_record_id"]
             try:
-                fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}")
+                fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
 
                 if fetch_res.status_code == 200:
                     st.success("200 OK: Key active. Decrypted plaintext restored.")
