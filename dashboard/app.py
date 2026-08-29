@@ -178,6 +178,15 @@ st.markdown(f"""
         border-color: {THEME["accent"]} !important;
         background-color: {THEME["surface_alt"]} !important;
     }}
+
+    /* Size these specific boxes to fit their input, instead of letting
+       them stretch to fill the full width of their container/column. */
+    .st-key-admin_key_input input,
+    div[class*="st-key-encrypt_field_"] input {{
+        width: auto !important;
+        min-width: 120px;
+        max-width: 260px;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -293,11 +302,9 @@ with st.container(border=True, key="view_panel"):
         st.subheader("⚙️ Enterprise DLP Config")
         st.caption("Configure which JSON fields the proxy encrypts on the fly.")
 
-        # Admin key box no longer stretches the full panel width — a
-        # password/key field doesn't need that much horizontal space.
-        key_col, _spacer = st.columns([1, 1])
-        with key_col:
-            admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
+        # Box width is controlled by CSS below (sized to content), not by
+        # splitting the row into fixed proportional columns.
+        admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
 
         # --- Dynamic "Fields to Encrypt" list, replaces the old single ---
         # --- comma-separated text input with a proper +/- add/remove UI. ---
@@ -316,7 +323,7 @@ with st.container(border=True, key="view_panel"):
         add_button_placed = False
         for row_start in range(0, len(field_list), 2):
             row_has_pair = (row_start + 1) < len(field_list)
-            row_cols = st.columns([3, 1, 3, 1])
+            row_cols = st.columns([2, 1, 2, 1])
             for offset in range(2):
                 idx = row_start + offset
                 if idx >= len(field_list):
