@@ -20,39 +20,41 @@ if dark_mode:
         "dot": "rgba(163, 177, 138, 0.08)",
         "text": "#DAD7CD",
         "muted": "#A3B18A",
-        "surface": "#3A5A40",
-        "surface_alt": "#436B4C",
-        "border": "rgba(163, 177, 138, 0.35)",
+        "surface": "#2C4238",
+        "surface_alt": "#253830",
+        "border": "rgba(163, 177, 138, 0.28)",
         "sidebar_bg": "#344E41",
-        "accent": "#A3B18A",
-        "accent_hover": "#DAD7CD",
-        "accent_active": "#588157",
-        "accent_text": "#344E41",
-        "danger": "#588157",
+        "accent": "#588157",
+        "accent_hover": "#3A5A40",
+        "accent_active": "#A3B18A",
+        "accent_text": "#DAD7CD",
+        "accent_active_text": "#344E41",
+        "danger": "#DAD7CD",
         "danger_text": "#344E41",
-        "button_shadow": "0 0 0 1px rgba(163, 177, 138, 0.15), 0 6px 20px rgba(163, 177, 138, 0.15)",
-        "button_shadow_hover": "0 0 0 1px rgba(163, 177, 138, 0.25), 0 8px 26px rgba(163, 177, 138, 0.25)",
-        "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.4)",
+        "button_shadow": "0 0 0 1px rgba(163, 177, 138, 0.15), 0 6px 20px rgba(0, 0, 0, 0.30)",
+        "button_shadow_hover": "0 0 0 1px rgba(163, 177, 138, 0.25), 0 8px 26px rgba(0, 0, 0, 0.40)",
+        "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 10px 28px rgba(0, 0, 0, 0.50)",
     }
 else:
     THEME = {
-        "bg": "#DAD7CD",
-        "dot": "rgba(163, 177, 138, 0.35)",
+        "bg": "#A3B18A",
+        "dot": "rgba(52, 78, 65, 0.12)",
         "text": "#344E41",
         "muted": "#3A5A40",
-        "surface": "#FFFFFF",
-        "surface_alt": "#E7EADC",
-        "border": "rgba(163, 177, 138, 0.6)",
-        "sidebar_bg": "#FFFFFF",
+        "surface": "#DAD7CD",
+        "surface_alt": "#EDE9D8",
+        "border": "rgba(58, 90, 64, 0.35)",
+        "sidebar_bg": "#DAD7CD",
         "accent": "#588157",
         "accent_hover": "#3A5A40",
         "accent_active": "#344E41",
         "accent_text": "#DAD7CD",
+        "accent_active_text": "#DAD7CD",
         "danger": "#344E41",
         "danger_text": "#DAD7CD",
-        "button_shadow": "0 1px 2px rgba(52, 78, 65, 0.08)",
-        "button_shadow_hover": "0 4px 14px rgba(88, 129, 87, 0.28)",
-        "card_shadow": "0 1px 3px rgba(52, 78, 65, 0.06)",
+        "button_shadow": "0 1px 2px rgba(52, 78, 65, 0.18)",
+        "button_shadow_hover": "0 4px 14px rgba(58, 90, 64, 0.35)",
+        "card_shadow": "0 2px 6px rgba(52, 78, 65, 0.18)",
     }
 
 # --- CUSTOM THEME (CSS INJECTION) ---
@@ -116,7 +118,7 @@ st.markdown(f"""
 
     .stButton button:active {{
         background-color: {THEME["accent_active"]} !important;
-        color: {THEME["danger_text"]} !important;
+        color: {THEME["accent_active_text"]} !important;
         transform: translateY(0px);
     }}
 
