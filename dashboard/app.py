@@ -1,268 +1,409 @@
 import streamlit as st
 import requests
 import time
+import base64
+import json
+from pathlib import Path
+from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
 
-# --- Configuration ---
+# =========================================================
+# CONFIG
+# =========================================================
 st.set_page_config(page_title="DataExpiry Demo", layout="wide")
-
-# --- PREMIUM SAAS THEME (CSS INJECTION) ---
-st.markdown("""
-    <style>
-    /* Import Premium Fonts: Playfair Display for elegant headers, Inter for clean UI text */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
-
-    /* Global Base - Pure Black */
-    [data-testid="stAppViewContainer"] {
-        background-color: #000000;
-        color: #e5e5e5;
-    }
-    
-    [data-testid="stHeader"] {
-        background-color: transparent;
-    }
-
-    /* Sidebar - Very dark charcoal to separate slightly from main body */
-    [data-testid="stSidebar"] {
-        background-color: #050505;
-        border-right: 1px solid #1a1a1a;
-    }
-
-    /* Typography - Body */
-    .stApp, p, span, label, div {
-        font-family: 'Inter', sans-serif !important;
-        font-size: 15px !important;
-        letter-spacing: -0.1px;
-    }
-
-    /* Typography - Headings (The Editorial Serif Look) */
-    h1, h2, h3, h4 {
-        font-family: 'Playfair Display', serif !important;
-        font-weight: 500 !important;
-        color: #ffffff !important;
-        letter-spacing: -0.5px;
-    }
-    
-    h1 {
-        font-size: 3.5rem !important;
-        margin-bottom: 1rem !important;
-        line-height: 1.1 !important;
-    }
-
-    h2 {
-        font-size: 2rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-
-    /* Inputs & Select Boxes - Dark, minimal borders */
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] {
-        background-color: #0a0a0a !important;
-        border: 1px solid #2a2a2a !important;
-        color: #ffffff !important;
-        border-radius: 6px !important;
-        font-family: 'Inter', sans-serif !important;
-        padding: 12px 16px !important;
-        transition: border-color 0.2s ease;
-    }
-    .stTextInput input:focus, .stSelectbox div[data-baseweb="select"]:focus {
-        border-color: #ffffff !important;
-    }
-
-    /* Buttons - Premium White Pill Style (from reference image) */
-    .stButton button {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border-radius: 50px !important; /* Pill shape */
-        border: none !important;
-        font-family: 'Inter', sans-serif !important;
-        font-weight: 500 !important;
-        font-size: 14px !important;
-        padding: 10px 24px !important;
-        transition: all 0.2s ease !important;
-    }
-    .stButton button:hover {
-        background-color: #e0e0e0 !important;
-        transform: translateY(-1px);
-    }
-
-    /* Alerts & Messages - Stripped of harsh colors, made minimalist */
-    div[data-testid="stAlert"] {
-        background-color: #0a0a0a !important;
-        border: 1px solid #222222 !important;
-        border-radius: 6px !important;
-        color: #d1d1d1 !important;
-        padding: 16px !important;
-    }
-
-    /* Tab Styling - Clean underlines */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: transparent !important;
-        border-bottom: 1px solid #222222 !important;
-        gap: 2rem;
-    }
-    .stTabs [data-baseweb="tab"] {
-        font-family: 'Inter', sans-serif !important;
-        color: #777777 !important;
-        font-weight: 400 !important;
-        padding-bottom: 12px !important;
-        border-bottom: 2px solid transparent !important;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #ffffff !important;
-        border-bottom: 2px solid #ffffff !important;
-        font-weight: 500 !important;
-    }
-    
-    /* Dividers */
-    hr {
-        border-color: #222222 !important;
-        margin: 3rem 0 !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-
-st.title("DataExpiry.")
-st.markdown("<p style='color: #888; font-size: 1.1rem; margin-top: -20px; margin-bottom: 30px;'>Zero-Code Cryptographic Erasure for Enterprise.</p>", unsafe_allow_html=True)
 
 PROXY_URL = "https://6e3319dd2e30ff.lhr.life"
 BACKEND_URL = "https://bd2dfb593379b0.lhr.life"
-
-# BYPASS HEADERS to prevent Localtunnel HTML warning screens
-TUNNEL_HEADERS = {
-    "Bypass-Tunnel-Reminder": "true",
-    "ngrok-skip-browser-warning": "true",
-    "User-Agent": "DataExpiry-App/1.0"
-}
+BG_IMAGE_PATH = "cyber-background-8k.png"
 
 # =========================================================
-# SIDEBAR: Enterprise DLP Admin Config Panel
+# SESSION STATE
+# =========================================================
+st.session_state.setdefault("last_record_id", None)
+st.session_state.setdefault("expiry_time", None)
+st.session_state.setdefault("countdown_live", False)
+st.session_state.setdefault("soc_loaded", False)
+
+# =========================================================
+# BACKGROUND IMAGE
+# =========================================================
+@st.cache_data
+def get_base64_image(image_path):
+    path = Path(image_path)
+    if not path.exists():
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+bg_base64 = get_base64_image(BG_IMAGE_PATH)
+
+if bg_base64:
+    bg_css = f"""
+        background-image: url("data:image/png;base64,{bg_base64}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    """
+else:
+    bg_css = "background-color: #000000;"
+
+# =========================================================
+# THEME / CSS
+# =========================================================
+st.markdown(f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+    [data-testid="stAppViewContainer"] {{
+        {bg_css}
+    }}
+
+    [data-testid="stAppViewContainer"]::before {{
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.45);
+        z-index: 0;
+        pointer-events: none;
+    }}
+
+    [data-testid="stAppViewContainer"] > .main {{
+        position: relative;
+        z-index: 1;
+    }}
+
+    [data-testid="stHeader"] {{
+        background-color: rgba(0, 0, 0, 0);
+    }}
+
+    .stApp {{
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-size: 16px !important;
+        letter-spacing: -0.1px;
+    }}
+
+    .stApp h1 {{
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: -1.2px;
+        font-size: 2.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }}
+
+    .stApp h2 {{
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.8px;
+        font-size: 1.75rem !important;
+        margin-bottom: 1rem !important;
+    }}
+
+    .stApp h3 {{
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.5px;
+        font-size: 1.25rem !important;
+    }}
+
+    .stTextInput input {{
+        font-size: 14px !important;
+        font-family: 'Manrope', sans-serif !important;
+        padding: 10px 12px !important;
+    }}
+
+    .stSelectbox {{
+        font-size: 14px !important;
+    }}
+
+    .stButton button {{
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-weight: 600 !important;
+        letter-spacing: -0.2px;
+        font-size: 14px !important;
+        padding: 10px 20px !important;
+    }}
+
+    div[data-testid="stAlert"] {{
+        background-color: rgba(17, 17, 17, 0.85);
+        border: 1px solid #333333;
+        border-radius: 8px;
+        padding: 16px !important;
+        font-size: 14px !important;
+    }}
+
+    [data-testid="stSidebar"] {{
+        background-color: rgba(17, 17, 17, 0.9);
+    }}
+
+    [data-testid="stSidebar"] .stTextInput input {{
+        font-size: 13px !important;
+    }}
+
+    [data-testid="stSidebar"] .stMarkdownContainer {{
+        font-size: 14px !important;
+    }}
+
+    [data-testid="stSidebar"] h2 {{
+        font-size: 1.5rem !important;
+    }}
+
+    .stJson {{
+        font-size: 13px !important;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
+
+# =========================================================
+# HELPERS
+# =========================================================
+def format_ts(ts):
+    try:
+        return datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return str(ts)
+
+
+def fetch_soc_logs(admin_key: str, limit: int = 200):
+    headers = {"X-Admin-Key": admin_key}
+    return requests.get(
+        f"{PROXY_URL}/api/admin/logs",
+        headers=headers,
+        params={"limit": limit},
+        timeout=10
+    )
+
+# =========================================================
+# SIDEBAR
 # =========================================================
 with st.sidebar:
-    st.header("Admin Config")
+    st.header("⚙️ Enterprise DLP Config")
 
-    st.caption("Configure dynamic JSON field encryption. Changes sync to SQLite and apply immediately.")
+    st.caption(
+        "Configure which JSON fields the proxy encrypts on the fly. "
+        "Changes are saved permanently in the SQLite vault and apply immediately, no restart needed."
+    )
 
     admin_key = st.text_input("Admin API Key", type="password", key="admin_key_input")
-    target_fields = st.text_input("Fields to Encrypt (comma-separated)", "sensitive_data", key="target_fields_input")
+    target_fields = st.text_input(
+        "Fields to Encrypt (comma-separated)",
+        "sensitive_data",
+        key="target_fields_input"
+    )
 
-    if st.button("Apply Policies"):
-        headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
+    if st.button("Apply Security Policies"):
+        headers = {"X-Admin-Key": admin_key}
         payload = {"fields": target_fields}
         try:
-            res = requests.post(f"{PROXY_URL}/api/admin/config", json=payload, headers=headers)
+            res = requests.post(
+                f"{PROXY_URL}/api/admin/config",
+                json=payload,
+                headers=headers,
+                timeout=10
+            )
             if res.status_code in [200, 201]:
                 st.success(f"Active fields: {res.json().get('active_fields')}")
             elif res.status_code == 401:
-                st.error("Invalid Admin Key.")
+                st.error("Invalid Admin Key!")
             else:
                 st.error(f"Unexpected error: {res.status_code} - {res.text}")
         except requests.exceptions.ConnectionError:
-            st.error("Cannot reach proxy.")
+            st.error("Cannot reach proxy — is it running?")
+        except requests.exceptions.Timeout:
+            st.error("Proxy request timed out.")
 
     st.divider()
 
-    if st.button("View Active Fields"):
+    if st.button("🔄 View Current Active Fields"):
         try:
-            cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", headers=TUNNEL_HEADERS)
+            cfg_res = requests.get(f"{PROXY_URL}/api/admin/config", timeout=10)
             if cfg_res.status_code == 200:
                 st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
             else:
                 st.warning(f"Could not fetch config: {cfg_res.status_code}")
         except requests.exceptions.ConnectionError:
             st.warning("Proxy unreachable.")
+        except requests.exceptions.Timeout:
+            st.warning("Proxy request timed out.")
 
 # =========================================================
-# MAIN UI: Tabbed Views
+# TABS
 # =========================================================
-tab1, tab2 = st.tabs(["Client Environment", "Target Database"])
+tab_live, tab_soc = st.tabs(["🔌 Live Routing", "🛡️ SOC Dashboard"])
 
-with tab1:
-    st.subheader("Simulate Data Flow")
-    user_name = st.text_input("Customer Name", "Alice Smith")
-    sensitive_data = st.text_input("Sensitive Payload", "4532-xxxx-xxxx-8891")
+# =========================================================
+# TAB 1: LIVE ROUTING
+# =========================================================
+with tab_live:
+    col1, col2 = st.columns(2)
 
-    ttl_options = {
-        "15 Seconds (Live Pitch Demo)": 15,
-        "30 Seconds (Standard Demo)": 30,
-        "1 Hour (Temporary Cache)": 3600,
-        "24 Hours (Daily Rotation)": 86400,
-        "30 Days (Standard Compliance)": 2592000,
-        "1 Year (Enterprise Archival)": 31536000
-    }
-    selected_ttl = st.selectbox("Data Retention Policy", list(ttl_options.keys()))
-    ttl = ttl_options[selected_ttl]
+    with col1:
+        st.subheader("👤 Client / Application View")
+        user_name = st.text_input("Customer Name", "Alice Smith")
+        sensitive_data = st.text_input(
+            "Sensitive Data (e.g. Card / SSN)",
+            "4532-xxxx-xxxx-8891"
+        )
 
-    if st.button("Submit to Proxy"):
-        payload = {
-            "user_name": user_name,
-            "sensitive_data": sensitive_data,
-            "ttl_seconds": ttl
+        ttl_options = {
+            "15 Seconds (Live Pitch Demo)": 15,
+            "30 Seconds (Standard Demo)": 30,
+            "1 Hour (Temporary Cache)": 3600,
+            "24 Hours (Daily Rotation)": 86400,
+            "30 Days (Standard Compliance)": 2592000,
+            "1 Year (Enterprise Archival)": 31536000
         }
-        try:
-            res = requests.post(f"{PROXY_URL}/api/records", json=payload, headers=TUNNEL_HEADERS)
-            if res.status_code in [200, 201]:
-                st.session_state["last_record_id"] = res.json().get("id")
-                st.session_state["expiry_time"] = time.time() + ttl
-                st.success(f"Secured with {selected_ttl} retention.")
-            else:
-                st.error(f"Proxy Error: {res.status_code}")
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to Proxy.")
 
-with tab2:
-    st.subheader("Database Ciphertext")
-    st.info("Live interception of company_database.db:")
+        selected_ttl = st.selectbox(
+            "Data Retention Policy (Time-To-Live)",
+            list(ttl_options.keys())
+        )
+        ttl = ttl_options[selected_ttl]
 
-    if st.button("Refresh View"):
-        try:
-            db_res = requests.get(f"{BACKEND_URL}/api/records", headers=TUNNEL_HEADERS)
-            if db_res.status_code == 200:
-                records = db_res.json()
-                if records:
-                    st.json(records)
+        if st.button("Submit Sensitive Data"):
+            payload = {
+                "user_name": user_name,
+                "sensitive_data": sensitive_data,
+                "ttl_seconds": ttl
+            }
+            try:
+                res = requests.post(f"{PROXY_URL}/api/records", json=payload, timeout=10)
+                if res.status_code in [200, 201]:
+                    body = res.json()
+                    st.session_state["last_record_id"] = body.get("id")
+                    st.session_state["expiry_time"] = time.time() + ttl
+                    st.session_state["countdown_live"] = ttl <= 60
+                    st.success(f"Data routed through Proxy with a {selected_ttl} retention policy!")
                 else:
-                    st.write("Database is currently empty.")
-            else:
-                st.error("Failed to read database.")
-        except requests.exceptions.ConnectionError:
-            st.warning("Target backend is not running.")
+                    st.error(f"Proxy Error: {res.status_code} - {res.text}")
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
+            except requests.exceptions.Timeout:
+                st.error("Proxy request timed out.")
 
-st.divider()
+    with col2:
+        st.subheader("🕵️ Hacker View (Target Database)")
+        st.info("Live peek inside `company_database.db`:")
 
-# --- Live Expiry & Retrieval Demo ---
-if "expiry_time" in st.session_state and "last_record_id" in st.session_state:
-    st.subheader("Cryptographic Validation")
+        if st.button("Refresh Database View"):
+            try:
+                db_res = requests.get(f"{BACKEND_URL}/api/records", timeout=10)
+                if db_res.status_code == 200:
+                    records = db_res.json()
+                    if records:
+                        st.json(records)
+                    else:
+                        st.write("Database is currently empty.")
+                else:
+                    st.error("Failed to read database.")
+            except requests.exceptions.ConnectionError:
+                st.warning("Target backend (port 5000) is not running.")
+            except requests.exceptions.Timeout:
+                st.warning("Target backend request timed out.")
 
-    timer_placeholder = st.empty()
+    st.divider()
 
-    if st.button("Attempt Decrypted Read"):
+    if st.session_state["expiry_time"] and st.session_state["last_record_id"]:
+        st.subheader("⏱️ Live Expiry & Retrieval Test")
+
         rec_id = st.session_state["last_record_id"]
-        try:
-            fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", headers=TUNNEL_HEADERS)
+        remaining = max(0, int(st.session_state["expiry_time"] - time.time()))
 
-            if fetch_res.status_code == 200:
-                st.success("200 OK: Key active. Decrypted plaintext restored.")
-                st.json(fetch_res.json())
-            elif fetch_res.status_code == 410:
-                st.error("410 Gone: Decryption key permanently erased from Vault.")
-                st.json(fetch_res.json())
+        if remaining > 0 and st.session_state.get("countdown_live", False):
+            st_autorefresh(interval=1000, key="ttl_countdown_refresh")
+
+        if st.button("Attempt Decrypted Read via Proxy"):
+            try:
+                fetch_res = requests.get(f"{PROXY_URL}/api/records/{rec_id}", timeout=10)
+
+                if fetch_res.status_code == 200:
+                    st.success("200 OK: Key active. Decrypted plaintext restored.")
+                    st.json(fetch_res.json())
+                elif fetch_res.status_code == 410:
+                    st.error("410 Gone: Decryption key permanently erased from Vault.")
+                    try:
+                        st.json(fetch_res.json())
+                    except Exception:
+                        st.code(fetch_res.text)
+                else:
+                    st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
+                    try:
+                        st.json(fetch_res.json())
+                    except Exception:
+                        st.code(fetch_res.text)
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot connect to Proxy for retrieval.")
+            except requests.exceptions.Timeout:
+                st.error("Proxy retrieval request timed out.")
+
+        if remaining > 0:
+            if remaining <= 60:
+                st.warning(f"⏳ **LIVE COUNTDOWN:** `{remaining}s` remaining before cryptographic shredding...")
             else:
-                st.warning(f"Unexpected Proxy response: {fetch_res.status_code}")
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to Proxy for retrieval.")
-
-    # Live Countdown Loop
-    remaining = int(st.session_state["expiry_time"] - time.time())
-
-    if remaining > 0:
-        if remaining <= 60: 
-            while remaining > 0:
-                timer_placeholder.info(f"⏳ TTL Active: {remaining}s remaining before key shredding.")
-                time.sleep(1)
-                remaining = int(st.session_state["expiry_time"] - time.time())
-            
-            timer_placeholder.error("🚨 TTL Expired: Key mathematically shredded.")
+                st.warning(f"⏳ **KEY ACTIVE:** `{remaining:,}s` remaining before cryptographic shredding...")
         else:
-            timer_placeholder.info(f"⏳ TTL Active: {remaining:,}s remaining before key shredding.")
+            st.error("🚨 **TTL EXPIRED:** Cryptographic key has been mathematically shredded in the Vault.")
+
+# =========================================================
+# TAB 2: SOC DASHBOARD
+# =========================================================
+with tab_soc:
+    st.subheader("🛡️ SOC Dashboard")
+    st.caption(
+        "Immutable defensive telemetry for encryption, decryption attempts, "
+        "config changes, and cryptographic shredding events."
+    )
+
+    if not admin_key:
+        st.warning("Enter the Admin API Key in the sidebar to unlock the SOC dashboard.")
     else:
-        timer_placeholder.error("🚨 TTL Expired: Key mathematically shredded.")
+        if st.button("🔄 Refresh SOC Telemetry"):
+            st.session_state["soc_loaded"] = True
+
+        try:
+            logs_res = fetch_soc_logs(admin_key, limit=250)
+
+            if logs_res.status_code == 200:
+                payload = logs_res.json()
+                summary = payload.get("summary", {})
+                logs = payload.get("logs", [])
+
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Active Keys", summary.get("active_keys", 0))
+                m2.metric("Shredded Keys", summary.get("shredded_keys", 0))
+                m3.metric("Decryption Attempts", summary.get("decryption_attempts", 0))
+                m4.metric("Total Events", summary.get("total_events", 0))
+
+                formatted_logs = []
+                for row in logs:
+                    details = row.get("details", {})
+                    if not isinstance(details, str):
+                        details = json.dumps(details)
+                    formatted_logs.append({
+                        "id": row.get("id"),
+                        "timestamp": format_ts(row.get("timestamp")),
+                        "event_type": row.get("event_type"),
+                        "data_id": row.get("data_id"),
+                        "details": details
+                    })
+
+                st.markdown("### Event Stream")
+                st.dataframe(
+                    formatted_logs,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=420
+                )
+
+            elif logs_res.status_code == 401:
+                st.error("Invalid Admin Key. SOC telemetry is restricted.")
+            else:
+                st.error(f"Failed to load SOC telemetry: {logs_res.status_code} - {logs_res.text}")
+
+        except requests.exceptions.ConnectionError:
+            st.error("Cannot reach proxy for SOC telemetry.")
+        except requests.exceptions.Timeout:
+            st.error("SOC telemetry request timed out.")
