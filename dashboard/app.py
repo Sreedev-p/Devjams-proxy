@@ -283,7 +283,7 @@ logo_svg = """
 
 st.markdown(f'<div style="margin-bottom: 20px;">{logo_svg}</div>', unsafe_allow_html=True)
 
-//////////////////////
+#//////////////////////
 
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
 BACKEND_URL = "https://thirty-plants-boil.loca.lt"
