@@ -17,17 +17,19 @@ except Exception:
 if dark_mode:
     THEME = {
         "bg": "#1D3557",
-        "dot": "rgba(168, 218, 220, 0.08)",
+        "dot": "rgba(168, 218, 220, 0.10)",
         "text": "#F1FAEE",
         "muted": "#A8DADC",
         "surface": "#24406B",
         "surface_alt": "#2C4B7A",
-        "border": "#35558C",
+        "border": "rgba(168, 218, 220, 0.35)",
         "sidebar_bg": "#1D3557",
         "accent": "#A8DADC",
-        "accent_hover": "#BCE3E4",
-        "accent_active": "#457B9D",
+        "accent_hover": "#F1FAEE",
+        "accent_active": "#E63946",
         "accent_text": "#1D3557",
+        "danger": "#E63946",
+        "danger_text": "#F1FAEE",
         "button_shadow": "0 0 0 1px rgba(168, 218, 220, 0.15), 0 6px 20px rgba(168, 218, 220, 0.15)",
         "button_shadow_hover": "0 0 0 1px rgba(168, 218, 220, 0.25), 0 8px 26px rgba(168, 218, 220, 0.25)",
         "card_shadow": "inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 24px rgba(0, 0, 0, 0.4)",
@@ -35,17 +37,19 @@ if dark_mode:
 else:
     THEME = {
         "bg": "#F1FAEE",
-        "dot": "#D9EEEE",
+        "dot": "rgba(168, 218, 220, 0.35)",
         "text": "#1D3557",
         "muted": "#457B9D",
         "surface": "#FFFFFF",
-        "surface_alt": "#E8F6F0",
-        "border": "#C7E6E7",
+        "surface_alt": "#DCF0F0",
+        "border": "rgba(168, 218, 220, 0.6)",
         "sidebar_bg": "#FFFFFF",
         "accent": "#457B9D",
-        "accent_hover": "#396A89",
-        "accent_active": "#1D3557",
+        "accent_hover": "#1D3557",
+        "accent_active": "#E63946",
         "accent_text": "#F1FAEE",
+        "danger": "#E63946",
+        "danger_text": "#F1FAEE",
         "button_shadow": "0 1px 2px rgba(29, 53, 87, 0.08)",
         "button_shadow_hover": "0 4px 14px rgba(69, 123, 157, 0.28)",
         "card_shadow": "0 1px 3px rgba(29, 53, 87, 0.06)",
@@ -110,6 +114,12 @@ st.markdown(f"""
         transform: translateY(-1px);
     }}
 
+    .stButton button:active {{
+        background-color: {THEME["accent_active"]} !important;
+        color: {THEME["danger_text"]} !important;
+        transform: translateY(0px);
+    }}
+
     div[data-testid="stAlert"] {{
         background-color: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
@@ -166,7 +176,7 @@ st.markdown(f"""
        inline control rather than a full primary action button. */
     .st-key-add_field_btn button {{
         background-color: transparent !important;
-        color: {THEME["accent_active"] if not dark_mode else THEME["accent"]} !important;
+        color: {THEME["accent"]} !important;
         border: 1px dashed {THEME["border"]} !important;
         box-shadow: none !important;
         width: auto;
@@ -177,6 +187,24 @@ st.markdown(f"""
     .st-key-add_field_btn button:hover {{
         border-color: {THEME["accent"]} !important;
         background-color: {THEME["surface_alt"]} !important;
+    }}
+
+    /* Field-remove "✕" buttons are destructive actions, so they get their
+       own red treatment distinct from the primary accent color used on
+       every other button — a deliberate, purposeful use of the palette's
+       red swatch rather than leaving it unused. */
+    div[class*="st-key-remove_field_"] button {{
+        background-color: transparent !important;
+        color: {THEME["danger"]} !important;
+        border: 1px solid {THEME["danger"]} !important;
+        box-shadow: none !important;
+    }}
+
+    div[class*="st-key-remove_field_"] button:hover {{
+        background-color: {THEME["danger"]} !important;
+        color: {THEME["danger_text"]} !important;
+        box-shadow: none !important;
+        transform: none !important;
     }}
     </style>
 """, unsafe_allow_html=True)
