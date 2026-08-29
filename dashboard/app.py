@@ -146,7 +146,7 @@ with col1:
         }
         try:
             res = requests.post(f"{PROXY_URL}/api/records", json=payload)
-            if res.status_code == 201:
+            if res.status_code in [200,201]:
                 st.session_state["last_record_id"] = res.json().get("id")
                 st.session_state["expiry_time"] = time.time() + ttl
                 st.success(f"Data routed through Proxy with a {selected_ttl} retention policy!")
