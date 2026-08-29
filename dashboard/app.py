@@ -152,8 +152,8 @@ st.markdown(f"""
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
 # dashboard/app.py (around line 8)
-PROXY_URL = "https://56d2bcc776805b.lhr.life"
-BACKEND_URL = "https://353bd044ed9e1d.lhr.life"
+PROXY_URL = "https://40ec62cb2106c1.lhr.life"
+BACKEND_URL = "https://01cdf88cc466ef.lhr.life"
 
 # =========================================================
 # SIDEBAR: Enterprise DLP Admin Config Panel
