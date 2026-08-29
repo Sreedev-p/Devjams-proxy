@@ -62,6 +62,10 @@ st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+    :root, .stApp {{
+        --primary-color: {THEME["accent"]} !important;
+    }}
+
     [data-testid="stAppViewContainer"] {{
         background-color: {THEME["bg"]};
         background-image: radial-gradient(circle, {THEME["dot"]} 1px, transparent 1px);
@@ -100,6 +104,27 @@ st.markdown(f"""
     .stTextInput input:focus-visible {{
         box-shadow: 0 0 0 1px {THEME["accent"]} !important;
         outline: none !important;
+    }}
+
+    /* Streamlit renders inputs inside a BaseWeb wrapper div that draws its
+       own focus ring independently of the <input> element above — this is
+       the actual source of the red outline on password/text fields, so it
+       needs to be overridden directly rather than relying on the input's
+       own :focus styles alone. */
+    div[data-baseweb="input"],
+    div[data-baseweb="base-input"] {{
+        border-color: {THEME["border"]} !important;
+    }}
+
+    div[data-baseweb="input"]:focus-within,
+    div[data-baseweb="base-input"]:focus-within {{
+        border-color: {THEME["accent"]} !important;
+        box-shadow: 0 0 0 1px {THEME["accent"]} !important;
+    }}
+
+    input:focus, input:focus-visible {{
+        outline: none !important;
+        box-shadow: none !important;
     }}
 
     .stSelectbox > div > div {{
@@ -152,8 +177,10 @@ st.markdown(f"""
     }}
 
     div[data-testid="stAlert"] code {{
-        color: {THEME["accent"]} !important;
-        background-color: {THEME["surface_alt"]} !important;
+        color: {THEME["muted"]} !important;
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
     }}
 
     hr {{ border-color: {THEME["border"]} !important; }}
