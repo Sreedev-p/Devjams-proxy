@@ -15,7 +15,7 @@ from reaper import run_reaper
 
 TARGET_BACKEND = os.getenv("TARGET_BACKEND", "https://bd2dfb593379b0.lhr.life")
 DEFAULT_TARGET_FIELDS = {"sensitive_data"}
-ADMIN_API_KEY = os.getenv("DATAEXPIRY_ADMIN_KEY", "supersecretadmin")
+ADMIN_API_KEY = os.getenv("DATAEXPIRY_ADMIN_KEY", "hackathon_admin_99")
 
 
 @asynccontextmanager
