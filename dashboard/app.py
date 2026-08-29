@@ -5,8 +5,9 @@ import time
 st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 st.title("🛡️ DataExpiry: Zero-Code Cryptographic Erasure")
 
-PROXY_URL = "http://127.0.0.1:8000"
-BACKEND_URL = "http://127.0.0.1:5000" 
+# dashboard/app.py (around line 8)
+PROXY_URL = "https://c361391c250129.lhr.life"
+BACKEND_URL = "https://6e63d2d51e6eac.lhr.life"
 
 col1, col2 = st.columns(2)
 
