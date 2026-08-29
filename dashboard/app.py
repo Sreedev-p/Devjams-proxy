@@ -238,7 +238,7 @@ with st.container(border=True, key="view_panel"):
                 st.error("Cannot connect to Proxy! (Check if port 8000 is running).")
 
     elif active_view == "Hacker View":
-        st.subheader("🕵️ Hacker View (Target Database)")
+        st.subheader("Hacker View (Target Database)")
         st.info("Live peek inside `company_database.db`:")
 
         if st.button("Refresh Database View"):
