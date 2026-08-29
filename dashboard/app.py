@@ -203,12 +203,38 @@ st.markdown(f"""
 
     .st-key-view_selector label > div:first-child {{ display: none !important; }}
 
-    /* The native <input type="radio"> underneath isn't fully hidden by
-       the rule above, so the browser paints its own default indicator
-       using accent-color — which defaults to a system pink/red on many
-       browsers/OSes when left unset. Force it to match the theme. */
+    /* Streamlit's radio "dot" isn't a native <input> we can theme with
+       accent-color — it's custom-drawn (SVG or a styled div) using
+       Streamlit's own default primary color (#FF4B4B), often applied via
+       an inline style. Overriding every plausible paint property here,
+       with !important, so it can't be beaten by that inline style. */
+    .st-key-view_selector [data-testid="stRadio"] svg,
+    .st-key-view_selector [data-testid="stRadio"] svg circle,
+    .st-key-view_selector [data-testid="stRadio"] svg path {{
+        fill: {THEME["accent"]} !important;
+        stroke: {THEME["accent"]} !important;
+    }}
+
+    .st-key-view_selector [data-baseweb="radio"] div {{
+        background-color: transparent;
+        border-color: {THEME["accent"]} !important;
+    }}
+
+    .st-key-view_selector [data-baseweb="radio"] div[aria-checked="true"],
+    .st-key-view_selector [data-baseweb="radio"] div:has(input:checked) {{
+        background-color: {THEME["accent"]} !important;
+        border-color: {THEME["accent"]} !important;
+    }}
+
     .st-key-view_selector input[type="radio"] {{
         accent-color: {THEME["accent"]} !important;
+    }}
+
+    /* Belt-and-suspenders: force Streamlit's own theme variable to the
+       accent color, scoped to just this widget, in case the dot color is
+       actually being read from --primary-color rather than hardcoded. */
+    .st-key-view_selector [data-testid="stRadio"] {{
+        --primary-color: {THEME["accent"]} !important;
     }}
 
     .st-key-view_selector label > div:last-child {{
