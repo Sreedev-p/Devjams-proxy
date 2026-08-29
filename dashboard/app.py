@@ -7,145 +7,159 @@ from pathlib import Path
 # --- Configuration ---
 st.set_page_config(page_title="DataExpiry Demo", layout="wide")
 
-# --- BACKGROUND IMAGE (base64 embed so it works local or deployed) ---
-BG_IMAGE_PATH = "cyber-background-8k.png"
-
-@st.cache_data
-def get_base64_image(image_path):
-    path = Path(image_path)
-    if not path.exists():
-        return None
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
-bg_base64 = get_base64_image(BG_IMAGE_PATH)
-
-if bg_base64:
-    bg_css = f"""
-        background-image: url("data:image/png;base64,{bg_base64}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    """
-else:
-    bg_css = "background-color: #000000;"
-
-# --- CUSTOM THEME (CSS INJECTION) - FIXED ---
-st.markdown(f"""
+# --- CUSTOM THEME (CSS INJECTION) - LIGHT "TEAK-STYLE" REDESIGN ---
+st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
-    [data-testid="stAppViewContainer"] {{
-        {bg_css}
-    }}
+    /* Light off-white background with subtle dot grid, like the reference site */
+    [data-testid="stAppViewContainer"] {
+        background-color: #FAFAF7;
+        background-image: radial-gradient(circle, #E6E4DE 1px, transparent 1px);
+        background-size: 22px 22px;
+    }
 
-    [data-testid="stAppViewContainer"]::before {{
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.2);
-        z-index: 0;
-        pointer-events: none;
-    }}
-
-    [data-testid="stAppViewContainer"] > .main {{
+    [data-testid="stAppViewContainer"] > .main {
         position: relative;
         z-index: 1;
-    }}
+    }
 
-    [data-testid="stHeader"] {{
+    [data-testid="stHeader"] {
         background-color: rgba(0, 0, 0, 0);
-    }}
+    }
 
-    /* Global font sizing - reasonable defaults */
-    .stApp {{
+    /* Global font sizing */
+    .stApp {
         font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-size: 16px !important;
         letter-spacing: -0.1px;
-    }}
+        color: #14140F !important;
+    }
 
-    .stApp h1 {{
+    .stApp h1 {
         font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-weight: 700 !important;
         letter-spacing: -1.2px;
         font-size: 2.5rem !important;
         margin-bottom: 1.5rem !important;
-    }}
+        color: #14140F !important;
+    }
 
-    .stApp h2 {{
+    .stApp h2 {
         font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-weight: 600 !important;
         letter-spacing: -0.8px;
         font-size: 1.75rem !important;
         margin-bottom: 1rem !important;
-    }}
+        color: #14140F !important;
+    }
 
-    .stApp h3 {{
+    .stApp h3 {
         font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
         font-weight: 600 !important;
         letter-spacing: -0.5px;
         font-size: 1.25rem !important;
-    }}
+        color: #14140F !important;
+    }
 
     /* Input fields */
-    .stTextInput input {{
+    .stTextInput input {
         font-size: 14px !important;
         font-family: 'Manrope', sans-serif !important;
         padding: 10px 12px !important;
-    }}
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E0D9 !important;
+        border-radius: 8px !important;
+        color: #14140F !important;
+    }
 
-    .stSelectbox {{
+    .stSelectbox {
         font-size: 14px !important;
-    }}
+    }
 
-    /* Buttons */
-    .stButton button {{
+    .stSelectbox > div > div {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E0D9 !important;
+        border-radius: 8px !important;
+    }
+
+    /* Buttons - yellow pill, like the reference "Book a demo" button */
+    .stButton button {
         font-family: 'Space Grotesk', sans-serif !important;
         font-weight: 600 !important;
         letter-spacing: -0.2px;
         font-size: 14px !important;
         padding: 10px 20px !important;
-    }}
+        background-color: #F5D033 !important;
+        color: #14140F !important;
+        border: none !important;
+        border-radius: 999px !important;
+        box-shadow: none !important;
+        transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+
+    .stButton button:hover {
+        background-color: #E8C11F !important;
+        color: #14140F !important;
+        transform: translateY(-1px);
+    }
+
+    .stButton button:active {
+        background-color: #D9B310 !important;
+    }
 
     /* Alerts & Messages */
-    div[data-testid="stAlert"] {{
-        background-color: rgba(17, 17, 17, 0.85);
-        border: 1px solid #333333;
-        border-radius: 8px;
+    div[data-testid="stAlert"] {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E0D9;
+        border-radius: 10px;
         padding: 16px !important;
         font-size: 14px !important;
-    }}
+        color: #14140F !important;
+    }
 
     /* Sidebar specific */
-    [data-testid="stSidebar"] {{
-        background-color: rgba(17, 17, 17, 0.9);
-    }}
+    [data-testid="stSidebar"] {
+        background-color: #FFFFFF;
+        border-right: 1px solid #E2E0D9;
+    }
 
-    [data-testid="stSidebar"] .stTextInput input {{
+    [data-testid="stSidebar"] .stTextInput input {
         font-size: 13px !important;
-    }}
+    }
 
-    [data-testid="stSidebar"] .stMarkdownContainer {{
+    [data-testid="stSidebar"] .stMarkdownContainer {
         font-size: 14px !important;
-    }}
+        color: #14140F !important;
+    }
 
-    [data-testid="stSidebar"] h2 {{
+    [data-testid="stSidebar"] h2 {
         font-size: 1.5rem !important;
-    }}
+    }
 
     /* Divider */
-    hr {{
+    hr {
         margin: 2rem 0 !important;
-    }}
+        border-color: #E2E0D9 !important;
+    }
 
     /* JSON display */
-    .stJson {{
+    .stJson {
         font-size: 13px !important;
-    }}
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E0D9 !important;
+        border-radius: 8px !important;
+    }
+
+    /* Cards for columns (subheaders act as section headers) */
+    .stColumn {
+        background-color: transparent;
+    }
+
+    /* Captions */
+    .stCaption, [data-testid="stCaptionContainer"] {
+        color: #6B6A63 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
