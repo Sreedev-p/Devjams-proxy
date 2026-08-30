@@ -122,13 +122,38 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# ==========================================
+# APP-LEVEL SECURITY GATE
+# ==========================================
+if "portal_unlocked" not in st.session_state:
+    st.session_state.portal_unlocked = False
+
+if not st.session_state.portal_unlocked:
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        with st.container(border=True):
+            st.markdown("### 🔒 SOC Portal Access")
+            st.caption("This portal is restricted to authorized security administrators.")
+            pwd = st.text_input("Enter Portal Password", type="password")
+            if st.button("Authenticate", use_container_width=True):
+                # Change this password to whatever you want
+                if pwd == "soc_admin_2026": 
+                    st.session_state.portal_unlocked = True
+                    st.rerun()
+                else:
+                    st.error("Access Denied: Incorrect password")
+    st.stop() # Halts execution here until unlocked
+
+
 # --- STATE INITIALIZATION ---
 if "encrypt_fields" not in st.session_state:
     st.session_state.encrypt_fields = []
 if "admin_key" not in st.session_state:
     st.session_state.admin_key = "hackathon_admin_99"
 if "proxy_url" not in st.session_state:
-    st.session_state.proxy_url = "http://localhost:8000"
+    # UPDATED DEFAULT URL AS REQUESTED
+    st.session_state.proxy_url = "https://shaky-jokes-lick.loca.lt"
 
 def get_headers():
     return {
