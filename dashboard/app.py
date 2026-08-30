@@ -720,8 +720,7 @@ def render_expiry_panel():
     else:
         tone = THEME["critical"]
 
-    redacted_pct = (1 - ratio) * 100
-    raw_value = st.session_state.get("protected_value", "")
+      raw_value = st.session_state.get("protected_value", "")
 
     st.markdown(
         f"""
@@ -729,8 +728,7 @@ def render_expiry_panel():
             <strong class="mono">{st.session_state.last_record_id}</strong></div>
 
         <div class="redact-field">
-            <span style="opacity:0.85;">{raw_value}</span>
-            <div class="redact-overlay" style="width:{redacted_pct:.1f}%;"></div>
+            <span style="opacity:0.92;">{raw_value}</span>
         </div>
 
         <div class="redact-track">
@@ -744,7 +742,6 @@ def render_expiry_panel():
         """,
         unsafe_allow_html=True,
     )
-
     if st.button("Attempt Secure Retrieval", use_container_width=True):
         rec_id = st.session_state.last_record_id
         try:
