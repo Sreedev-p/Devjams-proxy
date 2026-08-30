@@ -720,7 +720,7 @@ def render_expiry_panel():
     else:
         tone = THEME["critical"]
 
-      raw_value = st.session_state.get("protected_value", "")
+        raw_value = st.session_state.get("protected_value", "")
 
     st.markdown(
         f"""
