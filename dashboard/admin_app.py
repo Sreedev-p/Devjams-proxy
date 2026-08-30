@@ -187,55 +187,32 @@ label, .stTextInput label p { font-family: 'IBM Plex Mono', monospace !important
 }
 [class*="st-key-rm_"] button:hover { border-color: var(--shred) !important; }
 
-/* ---- tabs -> premium segmented control ----
-   The old red line was Streamlit's default tab-highlight indicator bar
-   (baseweb's built-in sliding underline, in the theme's primary color).
-   `.stTabs [data-baseweb="tab-highlight"]` was too narrow a selector to
-   reliably catch it, so it kept showing through. Since data-baseweb
-   attributes are unique to this component, we target them directly and
-   kill the element outright rather than trying to recolor it — the pill
-   fill on the active tab is the indicator now, there's nothing sliding
-   underneath it to hide. */
-[data-testid="stTabs"] [data-baseweb="tab-list"] {
-    gap: 4px;
-    background: var(--panel);
-    padding: 4px;
-    border-radius: 8px;
-    border: 1px solid var(--hairline);
-    width: fit-content;
-}
-[data-testid="stTabs"] button[data-baseweb="tab"] {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.76rem;
+/* ---- switcher -> custom chip toggle (real st.button, not st.tabs) ----
+   st.tabs is a wrapper around a Baseweb component whose internals (the
+   sliding "tab-highlight" indicator bar) render in the theme's default
+   primary color, and its DOM structure isn't something we get to fully
+   control — CSS overrides on it kept getting outrun by however that
+   version renders. Switched the whole thing to two plain st.button
+   widgets driving st.session_state instead: full control, same
+   key-scoped technique already proven reliable elsewhere in this file. */
+[class*="st-key-tab_policy_btn"] button,
+[class*="st-key-tab_telemetry_btn"] button {
+    border-radius: 999px !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 0.74rem !important;
     letter-spacing: 0.05em;
-    color: var(--ink-dim);
+    padding: 9px 6px !important;
     background: transparent !important;
-    border-radius: 6px;
-    padding: 9px 20px;
-    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    border: 1px solid var(--hairline) !important;
+    color: var(--ink-dim) !important;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-[data-testid="stTabs"] button[data-baseweb="tab"]:hover {
-    color: var(--ink);
-    background: rgba(255,255,255,0.035) !important;
+[class*="st-key-tab_policy_btn"] button:hover,
+[class*="st-key-tab_telemetry_btn"] button:hover {
+    color: var(--ink) !important;
+    border-color: var(--ink-faint) !important;
+    transform: none;
 }
-[data-testid="stTabs"] button[aria-selected="true"] {
-    background: var(--panel-2) !important;
-    color: var(--signal) !important;
-    box-shadow: inset 0 0 0 1px rgba(127, 216, 200, 0.28);
-}
-[data-testid="stTabs"] button[aria-selected="true"] p { color: var(--signal) !important; }
-[data-baseweb="tab-highlight"],
-[data-baseweb="tab-border"] {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-[data-testid="stTabs"] [data-testid="stTabsPanel"] { padding-top: 1.1rem; }
 
 
 /* ---- containers as vault slots ---- */
@@ -444,10 +421,35 @@ st.markdown('<h1 style="margin-top:-8px; margin-bottom:2px;">SOC Command Center<
 st.markdown('<div style="font-family:\'IBM Plex Mono\',monospace; font-size:0.82rem; color:var(--ink-dim); margin-bottom:1.3rem;">Monitor active encryption matrices and manage Data Loss Prevention (DLP) rulesets.</div>', unsafe_allow_html=True)
 st.markdown('<hr>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["◆ POLICY MANAGEMENT", "◆ REAL-TIME TELEMETRY"])
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "policy"
+
+active_key = "tab_policy_btn" if st.session_state.active_tab == "policy" else "tab_telemetry_btn"
+st.markdown(f"""
+<style>
+[class*="st-key-{active_key}"] button {{
+    background: var(--signal-dim) !important;
+    border-color: var(--signal) !important;
+    color: var(--signal) !important;
+    font-weight: 600 !important;
+}}
+</style>
+""", unsafe_allow_html=True)
+
+tab_col1, tab_col2, tab_spacer = st.columns([1.7, 2, 5], gap="small")
+with tab_col1:
+    if st.button("◆ Policy Management", key="tab_policy_btn"):
+        st.session_state.active_tab = "policy"
+        st.rerun()
+with tab_col2:
+    if st.button("◆ Real-Time Telemetry", key="tab_telemetry_btn"):
+        st.session_state.active_tab = "telemetry"
+        st.rerun()
+
+st.markdown('<hr style="margin-top:0.7rem;">', unsafe_allow_html=True)
 
 # --- MODULE A: DLP POLICY MANAGER ---
-with tab1:
+if st.session_state.active_tab == "policy":
     col_title, col_sync = st.columns([3, 1])
     with col_title:
         st.markdown('<div class="vc-eyebrow">Active ruleset</div>', unsafe_allow_html=True)
@@ -520,7 +522,7 @@ with tab1:
                     st.error("Network error.")
 
 # --- MODULE B: SOC TELEMETRY ---
-with tab2:
+else:
     st.markdown('<div class="vc-eyebrow">Audit trail</div>', unsafe_allow_html=True)
     st.markdown('<div style="font-family:\'Space Grotesk\',sans-serif; font-size:1.15rem; font-weight:600; margin-bottom:2px;">Cryptographic Event Ledger</div>', unsafe_allow_html=True)
     st.markdown('<div style="font-family:\'IBM Plex Mono\',monospace; font-size:0.78rem; color:var(--ink-dim); margin-bottom:0.8rem;">Immutable append-only log of DEK generations, shreds, and access attempts.</div>', unsafe_allow_html=True)
