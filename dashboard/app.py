@@ -700,16 +700,18 @@ def protected_intake():
 
     render_expiry_panel()
 
-
+@st.fragment(run_every="1s")
 def render_expiry_panel():
     if not st.session_state.last_record_id or not st.session_state.expiry_time:
         return
 
-    st.markdown('<div class="panel-label" style="margin-top:24px;">02 · Cryptographic shredding test</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="panel-label" style="margin-top:24px;">02 · Cryptographic shredding test</div>',
+        unsafe_allow_html=True,
+    )
     st.markdown('<div class="panel">', unsafe_allow_html=True)
 
-    remaining = int(st.session_state.expiry_time - time.time())
-    remaining = max(remaining, 0)
+    remaining = max(int(st.session_state.expiry_time - time.time()), 0)
     total = st.session_state.get("ttl_total") or max(remaining, 1)
     ratio = max(min(remaining / total, 1), 0)
 
@@ -743,7 +745,7 @@ def render_expiry_panel():
         unsafe_allow_html=True,
     )
 
-    if st.button("Attempt Secure Retrieval", use_container_width=True):
+    if st.button("Attempt Secure Retrieval", use_container_width=True, key="attempt_secure_retrieval"):
         rec_id = st.session_state.last_record_id
         try:
             with st.spinner("Requesting plaintext through proxy…"):
@@ -786,7 +788,6 @@ def render_expiry_panel():
         st.error("TTL expired — the key has been mathematically shredded from the vault.")
 
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 def stamp_html(remaining):
     if remaining > 0:
