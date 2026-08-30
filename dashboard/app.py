@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
-BACKEND_URL = "https://thirty-plants-boil.loca.lt"
+BACKEND_URL = "https://shaky-jokes-lick.loca.lt"
 
 TUNNEL_HEADERS = {
     "Bypass-Tunnel-Reminder": "true",
