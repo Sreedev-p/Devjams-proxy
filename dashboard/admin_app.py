@@ -211,6 +211,19 @@ label, .stTextInput label p { font-family: 'IBM Plex Mono', monospace !important
     border-color: var(--ink-faint) !important;
     transform: none;
 }
+/* Force the switcher's two columns to shrink to their button's own
+   content width instead of stretching to their ratio-based share of the
+   row — that ratio math was what left a large dead gap between the two
+   chips. Scoped to just this row via the container key so it doesn't
+   affect any other st.columns layout in the app. */
+[class*="st-key-tab_switcher_row"] [data-testid="stHorizontalBlock"] {
+    gap: 0.5rem !important;
+}
+[class*="st-key-tab_switcher_row"] [data-testid="stHorizontalBlock"] > div {
+    flex: 0 0 auto !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+}
 
 
 /* ---- containers as vault slots ---- */
@@ -434,15 +447,16 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-tab_col1, tab_col2, tab_spacer = st.columns([1.7, 2, 5], gap="small")
-with tab_col1:
-    if st.button("◆ Policy Management", key="tab_policy_btn"):
-        st.session_state.active_tab = "policy"
-        st.rerun()
-with tab_col2:
-    if st.button("◆ Real-Time Telemetry", key="tab_telemetry_btn"):
-        st.session_state.active_tab = "telemetry"
-        st.rerun()
+with st.container(key="tab_switcher_row"):
+    tab_col1, tab_col2 = st.columns(2, gap="small")
+    with tab_col1:
+        if st.button("◆ Policy Management", key="tab_policy_btn"):
+            st.session_state.active_tab = "policy"
+            st.rerun()
+    with tab_col2:
+        if st.button("◆ Real-Time Telemetry", key="tab_telemetry_btn"):
+            st.session_state.active_tab = "telemetry"
+            st.rerun()
 
 st.markdown('<hr style="margin-top:0.7rem;">', unsafe_allow_html=True)
 
