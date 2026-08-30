@@ -373,6 +373,10 @@ st.markdown(
         transition: background 0.1s steps(1, end), color 0.1s steps(1, end);
     }}
 
+    .stButton button p {{
+        color: inherit !important;
+    }}
+
     .stButton button:hover {{
         background: {THEME["text"]} !important;
         color: {THEME["ink_on_light"]} !important;
@@ -385,6 +389,22 @@ st.markdown(
     .stButton button:focus-visible {{
         outline: 2px solid {THEME["safe"]} !important;
         outline-offset: 2px !important;
+    }}
+
+    .stButton button:disabled,
+    .stButton button[disabled],
+    .stButton button:disabled:hover,
+    .stButton button[disabled]:hover {{
+        background: {THEME["surface"]} !important;
+        color: {THEME["muted"]} !important;
+        border: 1px solid {THEME["border"]} !important;
+        opacity: 1 !important;
+        cursor: not-allowed !important;
+    }}
+
+    .stButton button:disabled p,
+    .stButton button[disabled] p {{
+        color: {THEME["muted"]} !important;
     }}
 
     .stAlert {{
