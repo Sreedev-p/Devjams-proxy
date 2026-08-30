@@ -608,8 +608,6 @@ def protected_intake():
     left, right = st.columns([1.25, 0.75], gap="large")
 
     with left:
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-
         with st.form("protect_form"):
             user_name = st.text_input("Customer name", value="Alice Becker", placeholder="Enter customer name")
             sensitive_data = st.text_input(
@@ -672,10 +670,7 @@ def protected_intake():
                     with st.expander("Technical detail"):
                         st.code(str(e), language=None)
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
     with right:
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
         st.markdown('<div class="panel-label">Policy summary</div>', unsafe_allow_html=True)
 
         selected_ttl_text = "Not selected"
@@ -712,7 +707,6 @@ def protected_intake():
             f"key expiration and retrieval failure.</div>",
             unsafe_allow_html=True,
         )
-        st.markdown("</div>", unsafe_allow_html=True)
 
     render_expiry_panel()
 
@@ -726,7 +720,6 @@ def render_expiry_panel():
         '<div class="panel-label" style="margin-top:24px;">02 · Cryptographic shredding test</div>',
         unsafe_allow_html=True,
     )
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
 
     remaining = max(int(st.session_state.expiry_time - time.time()), 0)
     total = st.session_state.get("ttl_total") or max(remaining, 1)
@@ -812,8 +805,6 @@ def render_expiry_panel():
     else:
         st.error("TTL expired — the key has been mathematically shredded from the vault.")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
 
 def stamp_html(remaining):
     if remaining > 0:
@@ -830,7 +821,6 @@ def exposure_test():
         ("Payload Readability", "Backend response"),
     ])
 
-    st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="panel-label">Exposed records</div>', unsafe_allow_html=True)
 
     if st.button("Inspect Exposed Records", use_container_width=True):
@@ -869,8 +859,6 @@ def exposure_test():
             st.error("Could not reach the backend. It may be offline or the tunnel expired.")
             with st.expander("Technical detail"):
                 st.code(str(e), language=None)
-
-    st.markdown("</div>", unsafe_allow_html=True)
 
 
 rail()
