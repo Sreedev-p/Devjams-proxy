@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
-BACKEND_URL = "https://large-geese-live.loca.lt"
+BACKEND_URL = "https://thirty-plants-boil.loca.lt"
 
 TUNNEL_HEADERS = {
     "Bypass-Tunnel-Reminder": "true",
@@ -66,18 +66,81 @@ st.markdown(
     }}
 
     .block-container {{
-        padding-top: 2.5rem;
+        padding-top: 2.25rem;
         padding-bottom: 2.5rem;
         max-width: 1200px;
     }}
 
     h1, h2, h3 {{
         color: {THEME["text"]} !important;
+        font-family: 'Space Grotesk', sans-serif;
         letter-spacing: -0.02em;
+        font-weight: 600;
     }}
+
+    h2 {{ font-size: 1.4rem !important; }}
+    h3 {{ font-size: 1.1rem !important; }}
 
     p, label, .stMarkdown, .stCaption {{
         color: {THEME["text"]};
+    }}
+
+    /* --- Browser surfaces: theme what we didn't draw --- */
+    ::selection {{
+        background: {THEME["accent"]};
+        color: #FFFFFF;
+    }}
+
+    ::-webkit-scrollbar {{
+        width: 10px;
+        height: 10px;
+    }}
+
+    ::-webkit-scrollbar-track {{
+        background: {THEME["bg"]};
+    }}
+
+    ::-webkit-scrollbar-thumb {{
+        background: {THEME["border_strong"]};
+        border-radius: 999px;
+    }}
+
+    ::-webkit-scrollbar-thumb:hover {{
+        background: {THEME["accent"]};
+    }}
+
+    * {{
+        scrollbar-color: {THEME["border_strong"]} {THEME["bg"]};
+        scrollbar-width: thin;
+    }}
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    a:focus-visible {{
+        outline: 2px solid {THEME["accent_soft"]} !important;
+        outline-offset: 2px !important;
+    }}
+
+    div[role="radiogroup"] label:has(input:focus-visible) {{
+        outline: 2px solid {THEME["accent_soft"]};
+        outline-offset: 2px;
+    }}
+
+    div[data-baseweb="select"]:has(*:focus-visible) {{
+        outline: 2px solid {THEME["accent_soft"]};
+        outline-offset: 2px;
+        border-radius: 10px;
+    }}
+
+    /* --- One authored motion moment, reused consistently --- */
+    .stAlert {{
+        animation: surface-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    }}
+
+    @keyframes surface-in {{
+        from {{ opacity: 0; transform: translateY(-4px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
     }}
 
     /* --- Metrics --- */
@@ -161,6 +224,11 @@ st.markdown(
         filter: brightness(0.96);
     }}
 
+    .stButton button:focus-visible {{
+        outline: 2px solid {THEME["accent_soft"]} !important;
+        outline-offset: 3px !important;
+    }}
+
     .stAlert {{
         background: {THEME["surface"]} !important;
         backdrop-filter: blur(14px);
@@ -219,13 +287,65 @@ st.markdown(
         font-family: 'JetBrains Mono', monospace;
     }}
 
+    /* --- Top bar: carries product identity so the hero doesn't need a kicker --- */
+    .topbar {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding-bottom: 22px;
+    }}
+
+    .topbar-brand {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
+
+    .topbar-mark {{
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: linear-gradient(155deg, {THEME["accent_soft"]}, {THEME["accent"]});
+        color: {THEME["accent_text"]};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: -0.02em;
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.28);
+    }}
+
+    .topbar-word {{
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: {THEME["text"]};
+        letter-spacing: -0.01em;
+    }}
+
+    .topbar-badge {{
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.78rem;
+        color: {THEME["muted"]};
+        border: 1px solid {THEME["border"]};
+        border-radius: 999px;
+        padding: 6px 14px;
+        background: {THEME["surface"]};
+    }}
+
     /* --- Hero --- */
     .hero-card {{
         background: {THEME["surface"]};
         backdrop-filter: blur(20px);
         border: 1px solid {THEME["border"]};
         border-radius: 20px;
-        padding: 28px 30px 40px 30px;
+        padding: 30px 30px 40px 30px;
         margin-bottom: 2.5rem;
         position: relative;
         overflow: visible;
@@ -242,16 +362,6 @@ st.markdown(
         pointer-events: none;
     }}
 
-    .hero-eyebrow {{
-        color: {THEME["accent_soft"]};
-        font-size: 0.76rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        font-family: 'JetBrains Mono', monospace;
-        position: relative;
-    }}
-
     .hero-title {{
         font-family: 'Space Grotesk', sans-serif;
         color: {THEME["text"]};
@@ -259,9 +369,10 @@ st.markdown(
         font-weight: 700;
         letter-spacing: -0.02em;
         line-height: 1.15;
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
+        margin-top: 0;
+        margin-bottom: 0.6rem;
         position: relative;
+        max-width: 18ch;
     }}
 
     .hero-title .accent-word {{
@@ -325,8 +436,8 @@ st.markdown(
     }}
 
     .stat-strip-label {{
-        font-family: 'JetBrains Mono', monospace;
         font-size: 0.72rem;
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         color: {THEME["muted"]};
@@ -340,6 +451,33 @@ st.markdown(
         display: flex;
         align-items: center;
         gap: 8px;
+    }}
+
+    /* --- TTL progress bar: real data, not decoration --- */
+    .ttl-track {{
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: {THEME["surface_alt"]};
+        border: 1px solid {THEME["border"]};
+        overflow: hidden;
+        margin: 6px 0 8px 0;
+    }}
+
+    .ttl-fill {{
+        height: 100%;
+        border-radius: 999px;
+        transition: width 1s linear, background 0.3s ease;
+    }}
+
+    .ttl-countdown {{
+        font-size: 0.85rem;
+        color: {THEME["muted"]};
+    }}
+
+    .ttl-countdown strong {{
+        color: {THEME["text"]};
+        font-weight: 600;
     }}
 
     .hero-sub {{
@@ -362,6 +500,17 @@ st.markdown(
     hr {{
         border-color: {THEME["border"]} !important;
     }}
+
+    @media (max-width: 640px) {{
+        .block-container {{ padding-top: 1.5rem; }}
+        .hero-card {{ padding: 24px 20px 34px 20px; }}
+        .hero-title {{ font-size: 1.9rem; max-width: none; }}
+        .status-chip {{ left: 20px; font-size: 0.72rem; padding: 7px 14px; }}
+        .stat-strip {{ flex-direction: column; }}
+        .stat-strip-item {{ border-right: none; border-bottom: 1px solid {THEME["border"]}; }}
+        .stat-strip-item:last-child {{ border-bottom: none; }}
+        .topbar {{ padding-bottom: 18px; }}
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -382,11 +531,28 @@ def safe_json_to_df(data):
     return pd.DataFrame()
 
 
+def topbar():
+    st.markdown(
+        """
+        <div class="topbar">
+            <div class="topbar-brand">
+                <span class="topbar-mark">DX</span>
+                <span class="topbar-word">DataExpiry</span>
+            </div>
+            <div class="topbar-badge">
+                <span class="status-dot"></span>
+                Live demo environment
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def hero():
     st.markdown(
         """
         <div class="hero-card">
-            <div class="hero-eyebrow">DataExpiry Platform</div>
             <div class="hero-title">Zero-Code <span class="accent-word">Cryptographic</span> Erasure</div>
             <div class="hero-sub">
                 Protect sensitive data in transit, enforce retention policies,
@@ -429,6 +595,34 @@ def render_overview_metrics():
         ("Policy Engine", "Online"),
         ("Vault Status", "Healthy"),
     ])
+
+
+def status_dot_html(color):
+    return f'<span class="status-dot" style="background:{color};box-shadow:none;animation:none;"></span>'
+
+
+def render_ttl_bar(remaining, total):
+    remaining = max(remaining, 0)
+    total = max(total, 1)
+    ratio = max(min(remaining / total, 1), 0)
+
+    if ratio > 0.5:
+        tone = THEME["success"]
+    elif ratio > 0.15:
+        tone = THEME["warning"]
+    else:
+        tone = THEME["danger"]
+
+    pct = ratio * 100
+    st.markdown(
+        f"""
+        <div class="ttl-track">
+            <div class="ttl-fill" style="width:{pct:.1f}%; background:{tone};"></div>
+        </div>
+        <div class="ttl-countdown mono"><strong>{remaining}s</strong> remaining of {total}s policy window</div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def protected_intake():
@@ -479,6 +673,7 @@ def protected_intake():
                         body = res.json()
                         st.session_state.last_record_id = body.get("id")
                         st.session_state.expiry_time = time.time() + ttl
+                        st.session_state.ttl_total = ttl
                         st.success("Record protected successfully and retention timer started.")
                     else:
                         st.error(f"Proxy error: {res.status_code} — {res.text}")
@@ -514,11 +709,14 @@ def render_expiry_panel():
         st.subheader("Cryptographic Shredding Test")
 
         remaining = int(st.session_state.expiry_time - time.time())
+        total = st.session_state.get("ttl_total") or max(remaining, 1)
 
         a, b, c = st.columns(3)
         a.metric("Tracked Record", st.session_state.last_record_id)
         b.metric("Seconds Remaining", max(remaining, 0))
         c.metric("Vault Key State", "Active" if remaining > 0 else "Shredded")
+
+        render_ttl_bar(remaining, total)
 
         if st.button("Attempt Secure Retrieval", use_container_width=True):
             rec_id = st.session_state.last_record_id
@@ -555,7 +753,7 @@ def exposure_test():
 
     stat_strip([
         ("View Type", "Backend Exposure"),
-        ("Expected Risk", '<span class="status-dot" style="background:{danger}"></span>High'.replace("{danger}", THEME["danger"])),
+        ("Expected Risk", f"{status_dot_html(THEME['danger'])}High"),
         ("Payload Readability", "Masked / Encrypted"),
     ])
 
@@ -584,6 +782,7 @@ def exposure_test():
                 st.error(f"Backend connection failed: {e}")
 
 
+topbar()
 hero()
 page = top_nav()
 
