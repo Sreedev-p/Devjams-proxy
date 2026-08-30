@@ -17,15 +17,9 @@ TUNNEL_HEADERS = {
     "Bypass-Tunnel-Reminder": "true",
     "ngrok-skip-browser-warning": "true",
     "User-Agent": "DataExpiry-App/1.0",
+    "Accept": "application/json, text/plain, */*",
 }
 
-# ---------------------------------------------------------------------------
-# Design system: "Redaction Console"
-# Ink-black instrument panel. No blur, no gradients, no rounded cards.
-# Two semantic accents only — terminal green (active/safe) and redaction
-# red (shredded/exposed). Monospace is the primary data voice, not a
-# decorative flourish; Space Grotesk carries structure; Inter carries prose.
-# ---------------------------------------------------------------------------
 THEME = {
     "bg": "#0A0B0D",
     "surface": "#101114",
@@ -39,6 +33,7 @@ THEME = {
     "critical": "#FF4D4F",
     "critical_dim": "rgba(255, 77, 79, 0.14)",
     "ink_on_light": "#0A0B0D",
+    "warn": "#E8B339",
 }
 
 st.markdown(
@@ -55,13 +50,8 @@ st.markdown(
         color: {THEME["text"]};
     }}
 
-    [data-testid="stHeader"] {{
-        background: rgba(0,0,0,0);
-    }}
-
-    [data-testid="stAppViewContainer"] {{
-        background: {THEME["bg"]};
-    }}
+    [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
+    [data-testid="stAppViewContainer"] {{ background: {THEME["bg"]}; }}
 
     .block-container {{
         padding-top: 1.75rem;
@@ -79,9 +69,7 @@ st.markdown(
     h2 {{ font-size: 1.05rem !important; text-transform: uppercase; letter-spacing: 0.06em !important; }}
     h3 {{ font-size: 0.95rem !important; }}
 
-    p, label, .stMarkdown, .stCaption {{
-        color: {THEME["text"]};
-    }}
+    p, label, .stMarkdown, .stCaption {{ color: {THEME["text"]}; }}
 
     ::selection {{ background: {THEME["safe"]}; color: {THEME["ink_on_light"]}; }}
 
@@ -96,11 +84,8 @@ st.markdown(
         outline-offset: 2px !important;
     }}
 
-    .mono {{
-        font-family: 'JetBrains Mono', monospace;
-    }}
+    .mono {{ font-family: 'JetBrains Mono', monospace; }}
 
-    /* ============================= INSTRUMENT RAIL ============================= */
     .rail {{
         display: flex;
         align-items: center;
@@ -163,7 +148,6 @@ st.markdown(
         50%, 100% {{ opacity: 0.25; }}
     }}
 
-    /* ============================= TITLE BLOCK ============================= */
     .titleblock {{
         position: relative;
         border: 1px solid {THEME["border"]};
@@ -222,7 +206,6 @@ st.markdown(
         font-weight: 600;
     }}
 
-    /* ============================= NAV TABS ============================= */
     div[role="radiogroup"] {{
         gap: 0;
         border-bottom: 1px solid {THEME["border"]};
@@ -253,24 +236,14 @@ st.markdown(
         display: none !important;
     }}
 
-    div[role="radiogroup"] label:hover p {{
-        color: {THEME["text"]} !important;
-    }}
-
-    div[role="radiogroup"] label:has(input:checked) {{
-        border-bottom-color: {THEME["text"]};
-    }}
-
-    div[role="radiogroup"] label:has(input:checked) p {{
-        color: {THEME["text"]} !important;
-    }}
-
+    div[role="radiogroup"] label:hover p {{ color: {THEME["text"]} !important; }}
+    div[role="radiogroup"] label:has(input:checked) {{ border-bottom-color: {THEME["text"]}; }}
+    div[role="radiogroup"] label:has(input:checked) p {{ color: {THEME["text"]} !important; }}
     div[role="radiogroup"] label:has(input:focus-visible) {{
         outline: 2px solid {THEME["text"]};
         outline-offset: 2px;
     }}
 
-    /* ============================= LEDGER (spec-row) ============================= */
     .ledger {{
         display: flex;
         border: 1px solid {THEME["border"]};
@@ -311,7 +284,6 @@ st.markdown(
         flex-shrink: 0;
     }}
 
-    /* ============================= PANEL ============================= */
     .panel {{
         border: 1px solid {THEME["border"]};
         padding: 22px 24px;
@@ -328,7 +300,6 @@ st.markdown(
         border-bottom: 1px solid {THEME["border"]};
     }}
 
-    /* ============================= FORM CONTROLS ============================= */
     .stTextInput input,
     .stSelectbox div[data-baseweb="select"] > div,
     div[data-baseweb="base-input"] {{
@@ -357,7 +328,6 @@ st.markdown(
         box-shadow: inset 0 -2px 0 0 {THEME["text"]} !important;
     }}
 
-    /* ============================= BUTTONS ============================= */
     .stButton button {{
         background: transparent !important;
         color: {THEME["text"]} !important;
@@ -373,18 +343,14 @@ st.markdown(
         transition: background 0.1s steps(1, end), color 0.1s steps(1, end);
     }}
 
-    .stButton button p {{
-        color: inherit !important;
-    }}
+    .stButton button p {{ color: inherit !important; }}
 
     .stButton button:hover {{
         background: {THEME["text"]} !important;
         color: {THEME["ink_on_light"]} !important;
     }}
 
-    .stButton button:active {{
-        background: {THEME["muted"]} !important;
-    }}
+    .stButton button:active {{ background: {THEME["muted"]} !important; }}
 
     .stButton button:focus-visible {{
         outline: 2px solid {THEME["safe"]} !important;
@@ -434,7 +400,6 @@ st.markdown(
 
     hr {{ border-color: {THEME["border"]} !important; }}
 
-    /* ============================= REDACTION METER ============================= */
     .redact-field {{
         position: relative;
         border: 1px solid {THEME["border"]};
@@ -495,6 +460,8 @@ st.markdown(
         font-size: 0.78rem;
         color: {THEME["muted"]};
         margin-bottom: 8px;
+        gap: 12px;
+        flex-wrap: wrap;
     }}
 
     .readout-row strong {{
@@ -520,17 +487,29 @@ st.markdown(
 
 if "last_record_id" not in st.session_state:
     st.session_state.last_record_id = None
-
 if "expiry_time" not in st.session_state:
     st.session_state.expiry_time = None
+if "ttl_total" not in st.session_state:
+    st.session_state.ttl_total = None
+if "protected_value" not in st.session_state:
+    st.session_state.protected_value = None
 
 
 def safe_json_to_df(data):
-    if isinstance(data, list) and data:
+    if isinstance(data, list):
         return pd.DataFrame(data)
     if isinstance(data, dict):
+        if isinstance(data.get("records"), list):
+            return pd.DataFrame(data["records"])
         return pd.DataFrame([data])
     return pd.DataFrame()
+
+
+def parse_json_safely(response):
+    try:
+        return response.json()
+    except ValueError:
+        return None
 
 
 def rail():
@@ -543,7 +522,7 @@ def rail():
             </div>
             <div class="rail-status">
                 <span class="glyph"></span>
-                Reaper daemon &middot; scanning every 2s
+                Reaper daemon &middot; manual inspection mode
             </div>
         </div>
         """,
@@ -616,54 +595,66 @@ def protected_intake():
     with left:
         st.markdown('<div class="panel">', unsafe_allow_html=True)
 
-        user_name = st.text_input("Customer name", value="Alice Smith")
-        sensitive_data = st.text_input(
-            "Sensitive data",
-            value="4532-xxxx-xxxx-8891",
-            help="Example: card number, ID, SSN, account reference.",
-        )
+        with st.form("protect_form"):
+            user_name = st.text_input("Customer name", value="", placeholder="Enter real customer name")
+            sensitive_data = st.text_input(
+                "Sensitive data",
+                value="",
+                placeholder="Enter actual secret to protect",
+                help="Example: card number, ID, SSN, account reference.",
+            )
 
-        ttl_options = {
-            "15 Seconds — Live demo": 15,
-            "30 Seconds — Standard demo": 30,
-            "1 Hour — Temporary cache": 3600,
-            "24 Hours — Daily rotation": 86400,
-            "30 Days — Compliance retention": 2592000,
-            "1 Year — Enterprise archival": 31536000,
-        }
-
-        selected_ttl = st.selectbox("Retention policy", list(ttl_options.keys()))
-        ttl = ttl_options[selected_ttl]
-
-        if st.button("Protect Record", use_container_width=True):
-            payload = {
-                "user_name": user_name,
-                "sensitive_data": sensitive_data,
-                "ttl_seconds": ttl,
+            ttl_options = {
+                "15 Seconds — Live demo": 15,
+                "30 Seconds — Standard demo": 30,
+                "1 Hour — Temporary cache": 3600,
+                "24 Hours — Daily rotation": 86400,
+                "30 Days — Compliance retention": 2592000,
+                "1 Year — Enterprise archival": 31536000,
             }
-            try:
-                with st.spinner("Encrypting and writing to vault…"):
-                    res = requests.post(
-                        f"{PROXY_URL}/api/records",
-                        json=payload,
-                        headers=TUNNEL_HEADERS,
-                        timeout=20,
-                    )
-                if res.status_code in (200, 201):
-                    body = res.json()
-                    st.session_state.last_record_id = body.get("id")
-                    st.session_state.expiry_time = time.time() + ttl
-                    st.session_state.ttl_total = ttl
-                    st.session_state.protected_value = sensitive_data
-                    st.success("Record protected. Retention timer started.")
-                else:
-                    st.error(f"Proxy rejected the record (status {res.status_code}).")
-                    with st.expander("Response detail"):
-                        st.code(res.text, language=None)
-            except requests.RequestException as e:
-                st.error("Could not reach the proxy. The vault may be offline or the tunnel expired.")
-                with st.expander("Technical detail"):
-                    st.code(str(e), language=None)
+
+            selected_ttl = st.selectbox("Retention policy", list(ttl_options.keys()))
+            ttl = ttl_options[selected_ttl]
+            submitted = st.form_submit_button("Protect Record", use_container_width=True)
+
+        if submitted:
+            if not user_name.strip() or not sensitive_data.strip():
+                st.error("Customer name and sensitive data are required.")
+            else:
+                payload = {
+                    "user_name": user_name.strip(),
+                    "sensitive_data": sensitive_data.strip(),
+                    "ttl_seconds": ttl,
+                }
+                try:
+                    with st.spinner("Encrypting and writing to vault…"):
+                        res = requests.post(
+                            f"{PROXY_URL}/api/records",
+                            json=payload,
+                            headers=TUNNEL_HEADERS,
+                            timeout=20,
+                        )
+
+                    body = parse_json_safely(res)
+
+                    if res.status_code in (200, 201):
+                        st.session_state.last_record_id = (body or {}).get("id")
+                        st.session_state.expiry_time = time.time() + ttl
+                        st.session_state.ttl_total = ttl
+                        st.session_state.protected_value = sensitive_data.strip()
+                        st.success("Record protected. Retention timer started.")
+                    else:
+                        st.error(f"Proxy rejected the record (status {res.status_code}).")
+                        with st.expander("Response detail"):
+                            if body is not None:
+                                st.json(body)
+                            else:
+                                st.code(res.text[:1000], language=None)
+
+                except requests.RequestException as e:
+                    st.error("Could not reach the proxy. The vault may be offline or the tunnel expired.")
+                    with st.expander("Technical detail"):
+                        st.code(str(e), language=None)
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -671,9 +662,15 @@ def protected_intake():
         st.markdown('<div class="panel">', unsafe_allow_html=True)
         st.markdown('<div class="panel-label">Policy summary</div>', unsafe_allow_html=True)
 
+        selected_ttl_text = "Not selected"
+        try:
+            selected_ttl_text = selected_ttl.split(" — ")[0]
+        except Exception:
+            pass
+
         st.markdown(
             f"""
-            <div class="readout-row"><span>Selected TTL</span><strong>{selected_ttl.split(" — ")[0]}</strong></div>
+            <div class="readout-row"><span>Selected TTL</span><strong>{selected_ttl_text}</strong></div>
             <div class="readout-row"><span>Encryption path</span><strong>Proxy → Vault → Backend</strong></div>
             """,
             unsafe_allow_html=True,
@@ -719,7 +716,7 @@ def render_expiry_panel():
     if ratio > 0.5:
         tone = THEME["safe"]
     elif ratio > 0.15:
-        tone = "#E8B339"
+        tone = THEME["warn"]
     else:
         tone = THEME["critical"]
 
@@ -758,14 +755,28 @@ def render_expiry_panel():
                     timeout=20,
                 )
 
+            body = parse_json_safely(fetch_res)
+
             if fetch_res.status_code == 200:
                 st.success("200 OK — key still active. Plaintext restored through proxy.")
-                st.json(fetch_res.json())
+                if body is not None:
+                    st.json(body)
+                else:
+                    st.code(fetch_res.text[:1000], language=None)
             elif fetch_res.status_code == 410:
                 st.error("410 Gone — decryption key has already been shredded. This record is unrecoverable.")
-                st.json(fetch_res.json())
+                if body is not None:
+                    st.json(body)
+                else:
+                    st.code(fetch_res.text[:1000], language=None)
             else:
                 st.warning(f"Unexpected proxy response: {fetch_res.status_code}")
+                with st.expander("Response detail"):
+                    if body is not None:
+                        st.json(body)
+                    else:
+                        st.code(fetch_res.text[:1000], language=None)
+
         except requests.RequestException as e:
             st.error("Retrieval request failed. The proxy or tunnel may be unreachable.")
             with st.expander("Technical detail"):
@@ -773,9 +784,6 @@ def render_expiry_panel():
 
     if remaining > 0:
         st.warning(f"Key will expire in {remaining} seconds.")
-        if remaining <= 60:
-            time.sleep(1)
-            st.rerun()
     else:
         st.error("TTL expired — the key has been mathematically shredded from the vault.")
 
@@ -784,8 +792,8 @@ def render_expiry_panel():
 
 def stamp_html(remaining):
     if remaining > 0:
-        return f'<span class="stamp stamp-safe">Active</span>'
-    return f'<span class="stamp stamp-critical">Shredded</span>'
+        return '<span class="stamp stamp-safe">Active</span>'
+    return '<span class="stamp stamp-critical">Shredded</span>'
 
 
 def exposure_test():
@@ -793,8 +801,8 @@ def exposure_test():
 
     ledger([
         ("View Type", "Backend Exposure"),
-        ("Expected Risk", f"{glyph(THEME['critical'])}High"),
-        ("Payload Readability", "Masked / Encrypted"),
+        ("Request Mode", "Manual"),
+        ("Payload Readability", "Backend response"),
     ])
 
     st.markdown('<div class="panel">', unsafe_allow_html=True)
@@ -808,17 +816,30 @@ def exposure_test():
                     headers=TUNNEL_HEADERS,
                     timeout=20,
                 )
+
+            body = parse_json_safely(db_res)
+
             if db_res.status_code == 200:
-                records = db_res.json()
-                if records:
-                    df = safe_json_to_df(records)
-                    st.dataframe(df, use_container_width=True, hide_index=True)
+                if body:
+                    df = safe_json_to_df(body)
+                    if df.empty:
+                        st.info("Backend returned a valid response, but there are no rows to display.")
+                    else:
+                        st.dataframe(df, use_container_width=True, hide_index=True)
                     with st.expander("Raw response"):
-                        st.json(records)
+                        st.json(body)
                 else:
-                    st.info("The backend database is currently empty.")
+                    st.warning("Backend returned 200 OK, but the response was not valid JSON.")
+                    with st.expander("Response preview"):
+                        st.code(db_res.text[:1000], language=None)
             else:
                 st.error(f"Backend returned an unexpected status ({db_res.status_code}).")
+                with st.expander("Response preview"):
+                    if body is not None:
+                        st.json(body)
+                    else:
+                        st.code(db_res.text[:1000], language=None)
+
         except requests.RequestException as e:
             st.error("Could not reach the backend. It may be offline or the tunnel expired.")
             with st.expander("Technical detail"):
