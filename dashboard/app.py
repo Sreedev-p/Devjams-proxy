@@ -19,10 +19,6 @@ TUNNEL_HEADERS = {
     "User-Agent": "DataExpiry-App/1.0",
 }
 
-# --- Premium cybersecurity palette: near-black navy base, cool steel-blue
-# text, and a controlled "signal blue" accent — the register used by
-# security/threat-intel dashboards (deep, technical, quietly confident)
-# rather than a bright consumer-app color. ---
 THEME = {
     "bg": "#070A10",
     "bg_glow": "rgba(59, 130, 246, 0.07)",
@@ -143,7 +139,7 @@ st.markdown(
         box-shadow: 0 0 0 1px {THEME["accent"]} !important;
     }}
 
-    /* --- Buttons: controlled signal-blue, no neon glow --- */
+    /* --- Buttons --- */
     .stButton button {{
         background: linear-gradient(180deg, {THEME["accent_soft"]} 0%, {THEME["accent"]} 100%) !important;
         color: #FFFFFF !important;
@@ -204,14 +200,10 @@ st.markdown(
         font-size: 0.92rem;
     }}
 
-    /* Hide the default circular radio indicator so the label itself
-       reads as a selectable tab/pill. */
     div[role="radiogroup"] label > div:first-child {{
         display: none !important;
     }}
 
-    /* Highlight whichever tab is actually selected — a controlled blue
-       wash, not a loud fill. */
     div[role="radiogroup"] label:has(input:checked) {{
         background: linear-gradient(180deg, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0.14) 100%) !important;
         border-color: {THEME["accent"]} !important;
@@ -227,8 +219,7 @@ st.markdown(
         font-family: 'JetBrains Mono', monospace;
     }}
 
-    /* --- Hero: serif display headline over clean sans body, classic
-       premium/luxury type pairing --- */
+    /* --- Hero --- */
     .hero-card {{
         background: {THEME["surface"]};
         backdrop-filter: blur(20px);
@@ -279,8 +270,6 @@ st.markdown(
         font-weight: 600;
     }}
 
-    /* Floating status chip that overlaps the hero card's bottom edge —
-       breaks the "everything is a flat bordered rectangle" pattern. */
     .status-chip {{
         position: absolute;
         bottom: -16px;
@@ -315,9 +304,6 @@ st.markdown(
         100% {{ box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }}
     }}
 
-    /* --- Flat inline stat strip: replaces identical bordered metric
-       cards with a single row separated by hairlines, so not every
-       section on the page reads as the same repeated rectangle. --- */
     .stat-strip {{
         display: flex;
         align-items: stretch;
@@ -381,9 +367,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if "encrypt_fields" not in st.session_state:
-    st.session_state.encrypt_fields = ["sensitive_data"]
-
 if "last_record_id" not in st.session_state:
     st.session_state.last_record_id = None
 
@@ -420,23 +403,16 @@ def hero():
 
 
 def top_nav():
+    # Admin tabs removed for production isolation
     return st.radio(
         "Navigation",
-        ["Protected Intake", "Exposure Test", "Policy Control", "Security Operations"],
+        ["Protected Intake", "Exposure Test"],
         horizontal=True,
         label_visibility="collapsed",
     )
 
 
 def stat_strip(items):
-    """Render a flat inline stat row (label + value pairs) separated by
-    hairlines, instead of N identical bordered metric cards.
-
-    Built as a single unbroken line with no leading whitespace on any
-    line — Streamlit's markdown renderer follows CommonMark rules, where
-    a line indented 4+ spaces is treated as a literal code block rather
-    than raw HTML, which is what was happening here before.
-    """
     cells = "".join(
         f'<div class="stat-strip-item">'
         f'<div class="stat-strip-label">{label}</div>'
@@ -608,188 +584,6 @@ def exposure_test():
                 st.error(f"Backend connection failed: {e}")
 
 
-def policy_control():
-    st.subheader("Policy Control")
-    st.caption("Configure which fields the proxy encrypts before data reaches the target system.")
-
-    stat_strip([
-        ("Admin Scope", "Encryption Policy"),
-        ("Editable Fields", str(len(st.session_state.encrypt_fields))),
-        ("Mode", "Live Config"),
-    ])
-
-    with st.container(border=True):
-        st.markdown('<div class="section-note">Administrative policy settings</div>', unsafe_allow_html=True)
-
-        admin_key = st.text_input("Admin API key", type="password", key="admin_key_input")
-
-        # If the key has changed since the last successful verification,
-        # the previous verification no longer applies — require re-checking
-        # before allowing edits again.
-        if admin_key != st.session_state.get("verified_admin_key"):
-            st.session_state.admin_key_verified = False
-
-        verify_col, status_col = st.columns([1, 3])
-        with verify_col:
-            verify_clicked = st.button("Verify Key", use_container_width=True)
-
-        if verify_clicked:
-            if not admin_key:
-                st.session_state.admin_key_verified = False
-                st.error("Enter an Admin API Key first.")
-            else:
-                try:
-                    headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
-                    res = requests.get(
-                        f"{PROXY_URL}/api/admin/stats",
-                        headers=headers,
-                        timeout=20,
-                    )
-                    if res.status_code == 200:
-                        st.session_state.admin_key_verified = True
-                        st.session_state.verified_admin_key = admin_key
-                    elif res.status_code == 401:
-                        st.session_state.admin_key_verified = False
-                        st.error("Invalid Admin API Key.")
-                    else:
-                        st.session_state.admin_key_verified = False
-                        st.error(f"Unexpected error verifying key: {res.status_code}")
-                except requests.RequestException as e:
-                    st.session_state.admin_key_verified = False
-                    st.error(f"Could not reach proxy: {e}")
-
-        is_verified = st.session_state.get("admin_key_verified", False)
-
-        with status_col:
-            st.write("")
-            if is_verified:
-                st.success("Key verified — policy editing unlocked.", icon="✅")
-            else:
-                st.info("Verify your Admin API Key to unlock policy editing.", icon="🔒")
-
-        st.markdown("---")
-
-        if not is_verified:
-            st.caption("Fields to encrypt")
-            st.write(
-                "🔒 Locked. Verify a valid Admin API Key above to view and edit the "
-                "encrypted-fields list."
-            )
-        else:
-            st.write("**Fields to encrypt**")
-
-            fields_to_remove = None
-            for idx, value in enumerate(st.session_state.encrypt_fields):
-                col_a, col_b = st.columns([6, 1])
-                with col_a:
-                    st.session_state.encrypt_fields[idx] = st.text_input(
-                        f"Field {idx + 1}",
-                        value=value,
-                        key=f"encrypt_field_{idx}",
-                        placeholder="e.g. sensitive_data",
-                    )
-                with col_b:
-                    st.write("")
-                    st.write("")
-                    if len(st.session_state.encrypt_fields) > 1:
-                        if st.button("Remove", key=f"remove_field_{idx}", use_container_width=True):
-                            fields_to_remove = idx
-
-            if fields_to_remove is not None:
-                st.session_state.encrypt_fields.pop(fields_to_remove)
-                st.rerun()
-
-            left, right = st.columns([1, 1])
-            with left:
-                if st.button("Add Field", use_container_width=True):
-                    st.session_state.encrypt_fields.append("")
-                    st.rerun()
-
-            target_fields = ",".join(
-                field.strip() for field in st.session_state.encrypt_fields if field.strip()
-            )
-
-            with right:
-                if st.button("Enforce Policy", use_container_width=True):
-                    headers = {"X-Admin-Key": admin_key, **TUNNEL_HEADERS}
-                    payload = {"fields": target_fields}
-                    try:
-                        res = requests.post(
-                            f"{PROXY_URL}/api/admin/config",
-                            json=payload,
-                            headers=headers,
-                            timeout=20,
-                        )
-                        if res.status_code in (200, 201):
-                            st.success(f"Active fields: {res.json().get('active_fields')}")
-                        elif res.status_code == 401:
-                            # Key may have been rotated/revoked server-side
-                            # since verification — re-lock the editor.
-                            st.session_state.admin_key_verified = False
-                            st.error("Invalid admin key.")
-                        else:
-                            st.error(f"Unexpected error: {res.status_code} — {res.text}")
-                    except requests.RequestException as e:
-                        st.error(f"Could not reach proxy: {e}")
-
-    with st.container(border=True):
-        st.markdown('<div class="section-note">Current policy</div>', unsafe_allow_html=True)
-        if st.button("Refresh Active Policy", use_container_width=True):
-            try:
-                cfg_res = requests.get(
-                    f"{PROXY_URL}/api/admin/config",
-                    headers=TUNNEL_HEADERS,
-                    timeout=20,
-                )
-                if cfg_res.status_code == 200:
-                    st.info(f"Currently encrypting: {cfg_res.json().get('active_fields')}")
-                else:
-                    st.warning(f"Could not fetch config: {cfg_res.status_code}")
-            except requests.RequestException as e:
-                st.warning(f"Proxy unreachable: {e}")
-
-
-def security_operations():
-    st.subheader("Security Operations")
-    st.caption("Review telemetry, event volume, and the immutable cryptographic audit trail.")
-
-    soc_key = st.text_input("Admin API key", type="password", key="soc_admin_key")
-
-    if st.button("Fetch Live Telemetry", use_container_width=True):
-        try:
-            headers = {"X-Admin-Key": soc_key, **TUNNEL_HEADERS}
-            res = requests.get(
-                f"{PROXY_URL}/api/admin/logs",
-                headers=headers,
-                timeout=20,
-            )
-
-            if res.status_code == 200:
-                data = res.json()
-                summary = data.get("summary", {})
-                logs = data.get("logs", [])
-
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Active Encrypted Keys", summary.get("active_keys", 0))
-                col2.metric("Shredded Keys", summary.get("shredded_keys", 0))
-                col3.metric("Decryption Attempts", summary.get("decryption_attempts", 0))
-
-                st.markdown("### Event Ledger")
-                if logs:
-                    df = safe_json_to_df(logs)
-                    st.dataframe(df, use_container_width=True, hide_index=True)
-                    with st.expander("Raw event payload"):
-                        st.json(logs)
-                else:
-                    st.info("No cryptographic events logged yet.")
-            elif res.status_code == 401:
-                st.error("Invalid admin key.")
-            else:
-                st.error(f"Error fetching logs: {res.status_code}")
-        except requests.RequestException as e:
-            st.error(f"Cannot connect to proxy: {e}")
-
-
 hero()
 page = top_nav()
 
@@ -799,7 +593,3 @@ if page == "Protected Intake":
     protected_intake()
 elif page == "Exposure Test":
     exposure_test()
-elif page == "Policy Control":
-    policy_control()
-else:
-    security_operations()
