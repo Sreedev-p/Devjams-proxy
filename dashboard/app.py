@@ -29,11 +29,8 @@ THEME = {
     "text": "#EDEFF1",
     "muted": "#888D96",
     "safe": "#33D17A",
-    "safe_dim": "rgba(51, 209, 122, 0.14)",
     "critical": "#FF4D4F",
-    "critical_dim": "rgba(255, 77, 79, 0.14)",
     "warn": "#E8B339",
-    "warn_dim": "rgba(232, 179, 57, 0.14)",
     "ink_on_light": "#0A0B0D",
 }
 
@@ -499,7 +496,7 @@ def safe_json_to_df(data):
     return pd.DataFrame()
 
 
-def fetch_response(url, method="GET", json_body=None, timeout=20):
+def fetch_response(url, method="GET", json_body=None, timeout=12):
     try:
         response = requests.request(
             method=method,
@@ -520,11 +517,12 @@ def fetch_response(url, method="GET", json_body=None, timeout=20):
             except ValueError:
                 parsed_json = None
 
+        preview_lower = text_preview.lower()
         looks_like_tunnel_page = (
-            "<html" in text_preview.lower()
-            or "tunnel reminder" in text_preview.lower()
-            or "ngrok" in text_preview.lower() and "visit site" in text_preview.lower()
-            or "localtunnel" in text_preview.lower()
+            "<html" in preview_lower
+            or "tunnel reminder" in preview_lower
+            or ("ngrok" in preview_lower and "visit site" in preview_lower)
+            or "localtunnel" in preview_lower
         )
 
         return {
@@ -535,7 +533,6 @@ def fetch_response(url, method="GET", json_body=None, timeout=20):
             "json": parsed_json,
             "text_preview": text_preview,
             "looks_like_tunnel_page": looks_like_tunnel_page,
-            "response": response,
             "error": None,
         }
     except requests.RequestException as exc:
@@ -547,14 +544,18 @@ def fetch_response(url, method="GET", json_body=None, timeout=20):
             "json": None,
             "text_preview": "",
             "looks_like_tunnel_page": False,
-            "response": None,
             "error": str(exc),
         }
 
 
-@st.cache_data(ttl=3, show_spinner=False)
-def fetch_live_records(url):
-    result = fetch_response(url)
+@st.cache_data(ttl=5, show_spinner=False)
+def fetch_endpoint_status(url):
+    return fetch_response(url, timeout=8)
+
+
+@st.cache_data(ttl=5, show_spinner=False)
+def fetch_endpoint_records(url):
+    result = fetch_response(url, timeout=15)
     if not result["reachable"]:
         raise requests.RequestException(result["error"])
     if result["looks_like_tunnel_page"]:
@@ -566,6 +567,11 @@ def fetch_live_records(url):
             f"Expected JSON but received {result['content_type'] or 'unknown content'}."
         )
     return result["json"]
+
+
+def clear_live_cache():
+    fetch_endpoint_status.clear()
+    fetch_endpoint_records.clear()
 
 
 def classify_status(result):
@@ -580,17 +586,21 @@ def classify_status(result):
     return ("Error", THEME["critical"], f"HTTP {result['status_code']}")
 
 
-def rail():
-    proxy = fetch_response(f"{PROXY_URL}/api/records", timeout=8)
-    backend = fetch_response(f"{BACKEND_URL}/api/records", timeout=8)
+proxy_records_url = f"{PROXY_URL}/api/records"
+backend_records_url = f"{BACKEND_URL}/api/records"
 
-    proxy_label, _, _ = classify_status(proxy)
-    backend_label, _, _ = classify_status(backend)
+proxy_status = fetch_endpoint_status(proxy_records_url)
+backend_status = fetch_endpoint_status(backend_records_url)
 
-    if proxy["reachable"] and backend["reachable"] and not proxy["looks_like_tunnel_page"] and not backend["looks_like_tunnel_page"]:
+
+def rail(proxy_status, backend_status):
+    proxy_label, _, _ = classify_status(proxy_status)
+    backend_label, _, _ = classify_status(backend_status)
+
+    if proxy_status["reachable"] and backend_status["reachable"] and not proxy_status["looks_like_tunnel_page"] and not backend_status["looks_like_tunnel_page"]:
         status_text = "LIVE · proxy + backend reachable"
         status_color = THEME["safe"]
-    elif proxy["reachable"] or backend["reachable"]:
+    elif proxy_status["reachable"] or backend_status["reachable"]:
         status_text = f"PARTIAL · proxy {proxy_label.lower()} / backend {backend_label.lower()}"
         status_color = THEME["warn"]
     else:
@@ -667,12 +677,9 @@ def stamp_html(remaining):
     return '<span class="stamp stamp-critical">Shredded</span>'
 
 
-def system_ledger():
-    proxy = fetch_response(f"{PROXY_URL}/api/records", timeout=8)
-    backend = fetch_response(f"{BACKEND_URL}/api/records", timeout=8)
-
-    proxy_label, proxy_color, proxy_detail = classify_status(proxy)
-    backend_label, backend_color, backend_detail = classify_status(backend)
+def system_ledger(proxy_status, backend_status):
+    proxy_label, proxy_color, proxy_detail = classify_status(proxy_status)
+    backend_label, backend_color, backend_detail = classify_status(backend_status)
 
     ledger([
         ("Proxy API", f"{glyph(proxy_color)}{proxy_label} · {proxy_detail}"),
@@ -728,36 +735,35 @@ def render_expiry_panel():
     )
 
     if st.button("Attempt Secure Retrieval", use_container_width=True):
-        rec_id = st.session_state.last_record_id
-        fetch_res = fetch_response(f"{PROXY_URL}/api/records/{rec_id}", timeout=20)
+        fetch_result = fetch_response(f"{PROXY_URL}/api/records/{st.session_state.last_record_id}", timeout=12)
 
-        if not fetch_res["reachable"]:
+        if not fetch_result["reachable"]:
             st.error("Retrieval request failed. The proxy may be unreachable.")
-            st.code(fetch_res["error"], language=None)
-        elif fetch_res["looks_like_tunnel_page"]:
+            st.code(fetch_result["error"], language=None)
+        elif fetch_result["looks_like_tunnel_page"]:
             st.error("Proxy tunnel returned an interstitial page instead of the API response.")
-            st.code(fetch_res["text_preview"], language=None)
-        elif fetch_res["status_code"] == 200:
+            st.code(fetch_result["text_preview"], language=None)
+        elif fetch_result["status_code"] == 200:
             st.success("200 OK — key still active. Plaintext restored through proxy.")
-            st.json(fetch_res["json"] if fetch_res["json"] is not None else fetch_res["text_preview"])
-        elif fetch_res["status_code"] == 410:
+            if fetch_result["json"] is not None:
+                st.json(fetch_result["json"])
+            else:
+                st.code(fetch_result["text_preview"], language=None)
+        elif fetch_result["status_code"] == 410:
             st.error("410 Gone — decryption key has been shredded. This record is unrecoverable.")
-            if fetch_res["json"] is not None:
-                st.json(fetch_res["json"])
+            if fetch_result["json"] is not None:
+                st.json(fetch_result["json"])
             else:
-                st.code(fetch_res["text_preview"], language=None)
+                st.code(fetch_result["text_preview"], language=None)
         else:
-            st.warning(f"Unexpected proxy response: {fetch_res['status_code']}")
-            if fetch_res["json"] is not None:
-                st.json(fetch_res["json"])
+            st.warning(f"Unexpected proxy response: {fetch_result['status_code']}")
+            if fetch_result["json"] is not None:
+                st.json(fetch_result["json"])
             else:
-                st.code(fetch_res["text_preview"], language=None)
+                st.code(fetch_result["text_preview"], language=None)
 
     if remaining > 0:
         st.warning(f"Key will expire in {remaining} seconds.")
-        if remaining <= 60:
-            time.sleep(1)
-            st.rerun()
     else:
         st.error("TTL expired — the key has been mathematically shredded from the vault.")
 
@@ -778,19 +784,20 @@ def live_records_panel(default_source="Proxy records", key_suffix="main"):
         key=f"source_{key_suffix}",
     )
 
-    url = f"{PROXY_URL}/api/records" if source == "Proxy records" else f"{BACKEND_URL}/api/records"
+    url = proxy_records_url if source == "Proxy records" else backend_records_url
 
     col1, col2 = st.columns([1, 1], gap="medium")
     with col1:
         refresh = st.button("Refresh live data", use_container_width=True, key=f"refresh_{key_suffix}")
     with col2:
-        auto = st.checkbox("Auto-refresh every 5 seconds", value=False, key=f"auto_{key_suffix}")
+        show_raw = st.checkbox("Show raw response", value=False, key=f"raw_{key_suffix}")
 
     if refresh:
-        fetch_live_records.clear()
+        clear_live_cache()
+        st.rerun()
 
-    raw_result = fetch_response(url, timeout=20)
-    status_label, status_color, status_detail = classify_status(raw_result)
+    endpoint_status = proxy_status if url == proxy_records_url else backend_status
+    status_label, status_color, status_detail = classify_status(endpoint_status)
 
     st.markdown(
         f"""
@@ -806,9 +813,9 @@ def live_records_panel(default_source="Proxy records", key_suffix="main"):
         unsafe_allow_html=True,
     )
 
-    if raw_result["reachable"] and raw_result["json"] is not None and raw_result["ok"] and not raw_result["looks_like_tunnel_page"]:
+    if endpoint_status["reachable"] and endpoint_status["json"] is not None and endpoint_status["ok"] and not endpoint_status["looks_like_tunnel_page"]:
         try:
-            records = fetch_live_records(url)
+            records = fetch_endpoint_records(url)
             df = safe_json_to_df(records)
 
             if df.empty:
@@ -816,81 +823,77 @@ def live_records_panel(default_source="Proxy records", key_suffix="main"):
             else:
                 st.dataframe(df, use_container_width=True, hide_index=True)
 
-            with st.expander("Raw API response"):
-                st.json(records)
+            if show_raw:
+                with st.expander("Raw API response", expanded=True):
+                    st.json(records)
         except requests.RequestException as e:
             st.error("Failed to render live records.")
             st.code(str(e), language=None)
     else:
-        if raw_result["looks_like_tunnel_page"]:
+        if endpoint_status["looks_like_tunnel_page"]:
             st.warning("The tunnel is reachable, but it returned an interstitial/reminder page instead of JSON.")
-        elif raw_result["reachable"] and raw_result["json"] is None:
+        elif endpoint_status["reachable"] and endpoint_status["json"] is None:
             st.warning("The endpoint is reachable, but it did not return JSON.")
-        elif not raw_result["reachable"]:
+        elif not endpoint_status["reachable"]:
             st.error("The endpoint is unreachable.")
         else:
-            st.error(f"Request failed with HTTP {raw_result['status_code']}.")
+            st.error(f"Request failed with HTTP {endpoint_status['status_code']}.")
 
         with st.expander("Response preview"):
-            preview = raw_result["text_preview"] or raw_result["error"] or "No response body."
+            preview = endpoint_status["text_preview"] or endpoint_status["error"] or "No response body."
             st.code(preview, language=None)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    if auto:
-        time.sleep(5)
-        st.rerun()
-
 
 def protected_intake():
     st.markdown('<div class="panel-label">01 · Create protected record</div>', unsafe_allow_html=True)
-
-    system_ledger()
+    system_ledger(proxy_status, backend_status)
 
     left, right = st.columns([1.25, 0.75], gap="large")
+
+    ttl_options = {
+        "15 Seconds — Live demo": 15,
+        "30 Seconds — Standard demo": 30,
+        "1 Hour — Temporary cache": 3600,
+        "24 Hours — Daily rotation": 86400,
+        "30 Days — Compliance retention": 2592000,
+        "1 Year — Enterprise archival": 31536000,
+    }
 
     with left:
         st.markdown('<div class="panel">', unsafe_allow_html=True)
 
-        user_name = st.text_input(
-            "Customer name",
-            value="",
-            placeholder="Enter real customer name",
-        )
-        sensitive_data = st.text_input(
-            "Sensitive data",
-            value="",
-            placeholder="Enter actual secret to protect",
-            help="Example: card number, ID, SSN, account reference.",
-        )
+        with st.form("protect_form", clear_on_submit=False):
+            user_name = st.text_input(
+                "Customer name",
+                value="",
+                placeholder="Enter real customer name",
+            )
+            sensitive_data = st.text_input(
+                "Sensitive data",
+                value="",
+                placeholder="Enter actual secret to protect",
+                help="Example: card number, ID, SSN, account reference.",
+            )
+            selected_ttl = st.selectbox("Retention policy", list(ttl_options.keys()))
+            submitted = st.form_submit_button("Protect Record", use_container_width=True)
 
-        ttl_options = {
-            "15 Seconds — Live demo": 15,
-            "30 Seconds — Standard demo": 30,
-            "1 Hour — Temporary cache": 3600,
-            "24 Hours — Daily rotation": 86400,
-            "30 Days — Compliance retention": 2592000,
-            "1 Year — Enterprise archival": 31536000,
-        }
-
-        selected_ttl = st.selectbox("Retention policy", list(ttl_options.keys()))
-        ttl = ttl_options[selected_ttl]
-
-        if st.button("Protect Record", use_container_width=True):
+        if submitted:
             if not user_name.strip() or not sensitive_data.strip():
                 st.error("Customer name and sensitive data are required.")
             else:
                 payload = {
                     "user_name": user_name.strip(),
                     "sensitive_data": sensitive_data.strip(),
-                    "ttl_seconds": ttl,
+                    "ttl_seconds": ttl_options[selected_ttl],
                 }
 
                 result = fetch_response(
                     f"{PROXY_URL}/api/records",
                     method="POST",
                     json_body=payload,
-                    timeout=20,
+                    timeout=15,
                 )
 
                 if not result["reachable"]:
@@ -902,10 +905,10 @@ def protected_intake():
                 elif result["status_code"] in (200, 201):
                     body = result["json"] if result["json"] is not None else {}
                     st.session_state.last_record_id = body.get("id")
-                    st.session_state.expiry_time = time.time() + ttl
-                    st.session_state.ttl_total = ttl
+                    st.session_state.expiry_time = time.time() + ttl_options[selected_ttl]
+                    st.session_state.ttl_total = ttl_options[selected_ttl]
                     st.session_state.protected_value = sensitive_data.strip()
-                    fetch_live_records.clear()
+                    clear_live_cache()
                     st.success("Record protected. Live data updated.")
                 else:
                     st.error(f"Proxy rejected the record (status {result['status_code']}).")
@@ -942,10 +945,14 @@ def protected_intake():
                 unsafe_allow_html=True,
             )
 
+        if st.button("Refresh status", use_container_width=True, key="refresh_status"):
+            clear_live_cache()
+            st.rerun()
+
         st.markdown(
             f'<div style="margin-top:16px;padding-top:14px;border-top:1px solid {THEME["border"]};'
             f'color:{THEME["muted"]};font-size:0.8rem;line-height:1.5;">'
-            f'The panel below reflects the latest response returned by the configured API.</div>',
+            f'The panels below reflect the latest response returned by the configured APIs.</div>',
             unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
@@ -957,8 +964,7 @@ def protected_intake():
 def exposure_test():
     st.markdown('<div class="panel-label">03 · Exposure test</div>', unsafe_allow_html=True)
 
-    backend_result = fetch_response(f"{BACKEND_URL}/api/records", timeout=12)
-    backend_label, backend_color, backend_detail = classify_status(backend_result)
+    backend_label, backend_color, backend_detail = classify_status(backend_status)
 
     ledger([
         ("Inspection Source", "Backend API"),
@@ -974,12 +980,17 @@ def exposure_test():
         f'If the tunnel serves an interstitial or reminder page, it is flagged separately instead of being mislabeled as offline.</div>',
         unsafe_allow_html=True,
     )
+
+    if st.button("Refresh backend check", use_container_width=True, key="refresh_backend"):
+        clear_live_cache()
+        st.rerun()
+
     st.markdown("</div>", unsafe_allow_html=True)
 
     live_records_panel(default_source="Backend records", key_suffix="exposure")
 
 
-rail()
+rail(proxy_status, backend_status)
 titleblock()
 page = nav_tabs()
 
