@@ -1,5 +1,6 @@
 import time
 import datetime
+import html
 import requests
 import pandas as pd
 import streamlit as st
@@ -184,30 +185,52 @@ label, .stTextInput label p { font-family: 'IBM Plex Mono', monospace !important
 }
 [class*="st-key-rm_"] button:hover { border-color: var(--shred) !important; }
 
-/* ---- tabs -> segmented control ---- */
-.stTabs [data-baseweb="tab-list"] {
+/* ---- tabs -> premium segmented control ----
+   The old red line was Streamlit's default tab-highlight indicator bar
+   (baseweb's built-in sliding underline, in the theme's primary color).
+   `.stTabs [data-baseweb="tab-highlight"]` was too narrow a selector to
+   reliably catch it, so it kept showing through. Since data-baseweb
+   attributes are unique to this component, we target them directly and
+   kill the element outright rather than trying to recolor it — the pill
+   fill on the active tab is the indicator now, there's nothing sliding
+   underneath it to hide. */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
     gap: 4px;
     background: var(--panel);
     padding: 4px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid var(--hairline);
     width: fit-content;
 }
-.stTabs [data-baseweb="tab"] {
+[data-testid="stTabs"] button[data-baseweb="tab"] {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.03em;
+    font-size: 0.76rem;
+    letter-spacing: 0.05em;
     color: var(--ink-dim);
-    background: transparent;
-    border-radius: 4px;
-    padding: 8px 18px;
+    background: transparent !important;
+    border-radius: 6px;
+    padding: 9px 20px;
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
-.stTabs [aria-selected="true"] {
+[data-testid="stTabs"] button[data-baseweb="tab"]:hover {
+    color: var(--ink);
+    background: rgba(255,255,255,0.035) !important;
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
     background: var(--panel-2) !important;
     color: var(--signal) !important;
+    box-shadow: inset 0 0 0 1px rgba(127, 216, 200, 0.28);
 }
-.stTabs [data-baseweb="tab-highlight"] { background-color: transparent !important; }
-.stTabs [data-baseweb="tab-border"] { display: none; }
+[data-testid="stTabs"] button[aria-selected="true"] p { color: var(--signal) !important; }
+[data-baseweb="tab-highlight"],
+[data-baseweb="tab-border"] {
+    display: none !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    background: transparent !important;
+}
+[data-testid="stTabs"] [data-testid="stTabsPanel"] { padding-top: 1.1rem; }
+
 
 /* ---- containers as vault slots ---- */
 [data-testid="stVerticalBlockBorderWrapper"] > div {
@@ -415,7 +438,7 @@ st.markdown('<h1 style="margin-top:-8px; margin-bottom:2px;">SOC Command Center<
 st.markdown('<div style="font-family:\'IBM Plex Mono\',monospace; font-size:0.82rem; color:var(--ink-dim); margin-bottom:1.3rem;">Monitor active encryption matrices and manage Data Loss Prevention (DLP) rulesets.</div>', unsafe_allow_html=True)
 st.markdown('<hr>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["POLICY MANAGEMENT", "REAL-TIME TELEMETRY"])
+tab1, tab2 = st.tabs(["◆ POLICY MANAGEMENT", "◆ REAL-TIME TELEMETRY"])
 
 # --- MODULE A: DLP POLICY MANAGER ---
 with tab1:
@@ -514,12 +537,17 @@ with tab2:
                 summary = data.get("summary", {})
                 logs = data.get("logs", [])
 
+                active_keys = html.escape(str(summary.get("active_keys", 0)))
+                shredded_keys = html.escape(str(summary.get("shredded_keys", 0)))
+                decryption_attempts = html.escape(str(summary.get("decryption_attempts", 0)))
+                total_events = html.escape(str(summary.get("total_events", len(logs))))
+
                 st.markdown(f"""
                 <div class="vc-metric-row">
-                    <div class="vc-metric signal"><div class="label">Active DEKs</div><div class="value">{summary.get("active_keys", 0)}</div></div>
-                    <div class="vc-metric shred"><div class="label">Shredded Keys</div><div class="value">{summary.get("shredded_keys", 0)}</div></div>
-                    <div class="vc-metric warn"><div class="label">Read Attempts</div><div class="value">{summary.get("decryption_attempts", 0)}</div></div>
-                    <div class="vc-metric"><div class="label">Total Audits</div><div class="value">{summary.get("total_events", len(logs))}</div></div>
+                    <div class="vc-metric signal"><div class="label">Active DEKs</div><div class="value">{active_keys}</div></div>
+                    <div class="vc-metric shred"><div class="label">Shredded Keys</div><div class="value">{shredded_keys}</div></div>
+                    <div class="vc-metric warn"><div class="label">Read Attempts</div><div class="value">{decryption_attempts}</div></div>
+                    <div class="vc-metric"><div class="label">Total Audits</div><div class="value">{total_events}</div></div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -536,12 +564,14 @@ with tab2:
 
                     rows_html = ""
                     for _, row in df.iterrows():
-                        cls, label = badge_map.get(row["event_type"], ("read", row["event_type"]))
+                        cls, raw_label = badge_map.get(row["event_type"], ("read", row["event_type"]))
+                        safe_label = raw_label if row["event_type"] in badge_map else f"● {html.escape(str(raw_label))}"
+                        safe_data_id = html.escape(str(row.get("data_id", "")))
                         rows_html += f"""
                         <tr>
                             <td class="ts">{row['timestamp']}</td>
-                            <td><span class="vc-badge {cls}">{label}</span></td>
-                            <td>{row.get('data_id', '')}</td>
+                            <td><span class="vc-badge {cls}">{safe_label}</span></td>
+                            <td>{safe_data_id}</td>
                         </tr>"""
 
                     table_html = f"""
