@@ -112,14 +112,12 @@ h1, h2, h3, h4, .vc-display { font-family: 'Space Grotesk', sans-serif !importan
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.78rem;
     color: var(--ink-dim);
-    display: inline-flex;
-    width: fit-content;
-    max-width: 100%;
+    display: flex;
     align-items: center;
-    padding: 0.5rem 0.75rem;
-    background: var(--panel-2);
+    padding: 0.5rem 0.65rem;
+    background: var(--panel);
     border: 1px solid var(--hairline);
-    border-radius: 5px;
+    border-radius: 4px;
 }
 
 /* ---- inputs ---- */
