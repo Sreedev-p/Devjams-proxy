@@ -745,7 +745,21 @@ def render_expiry_panel():
         unsafe_allow_html=True,
     )
 
-    if st.button("Attempt Secure Retrieval", use_container_width=True, key="attempt_secure_retrieval"):
+    if "retrieval_requested" not in st.session_state:
+        st.session_state.retrieval_requested = False
+
+    def request_secure_retrieval():
+        st.session_state.retrieval_requested = True
+
+    st.button(
+        "Attempt Secure Retrieval",
+        use_container_width=True,
+        key="attempt_secure_retrieval",
+        on_click=request_secure_retrieval,
+    )
+
+    if st.session_state.retrieval_requested:
+        st.session_state.retrieval_requested = False
         rec_id = st.session_state.last_record_id
         try:
             with st.spinner("Requesting plaintext through proxy…"):
