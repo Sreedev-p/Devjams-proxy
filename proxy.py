@@ -13,7 +13,7 @@ import vault
 import crypto_engine
 from reaper import run_reaper
 
-TARGET_BACKEND = os.getenv("TARGET_BACKEND", "https://shaky-jokes-lick.loca.lt")
+TARGET_BACKEND = os.getenv("TARGET_BACKEND", "https://large-geese-live.loca.lt")
 DEFAULT_TARGET_FIELDS = {"sensitive_data"}
 ADMIN_API_KEY = os.getenv("DATAEXPIRY_ADMIN_KEY", "hackathon_admin_99")
 
