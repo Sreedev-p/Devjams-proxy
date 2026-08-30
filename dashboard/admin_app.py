@@ -155,23 +155,34 @@ label, .stTextInput label p { font-family: 'IBM Plex Mono', monospace !important
 }
 .stButton button:active { transform: translateY(0); }
 
-.primary-btn .stButton button {
+/* Primary / danger buttons are targeted via their Streamlit `key`, not a
+   markdown div-wrap — a div opened in one st.markdown() and closed in
+   another never actually nests the widgets between them (each call is a
+   separate DOM sibling), so that old trick rendered as an empty box and
+   never touched the button at all. Streamlit gives widgets created with
+   `key=` a wrapper class of the form `st-key-<key>`, which we can target
+   directly and reliably. Requires streamlit >= 1.35. */
+[class*="st-key-auth_btn"] button,
+[class*="st-key-deploy_btn"] button,
+[class*="st-key-pull_btn"] button {
     background-color: var(--signal) !important;
     border: 1px solid var(--signal) !important;
     color: #061412 !important;
     font-weight: 600 !important;
 }
-.primary-btn .stButton button:hover {
+[class*="st-key-auth_btn"] button:hover,
+[class*="st-key-deploy_btn"] button:hover,
+[class*="st-key-pull_btn"] button:hover {
     background-color: #93E3D4 !important;
     color: #061412 !important;
     border-color: #93E3D4 !important;
 }
-.danger-btn .stButton button {
+[class*="st-key-rm_"] button {
     color: var(--shred) !important;
     border-color: var(--shred-dim) !important;
     background: transparent !important;
 }
-.danger-btn .stButton button:hover { border-color: var(--shred) !important; }
+[class*="st-key-rm_"] button:hover { border-color: var(--shred) !important; }
 
 /* ---- tabs -> segmented control ---- */
 .stTabs [data-baseweb="tab-list"] {
@@ -285,19 +296,23 @@ hr { border-color: var(--hairline) !important; }
 .vc-sweep-bar { position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: linear-gradient(90deg, transparent, var(--signal), transparent); animation: sweep 1.1s linear infinite; }
 
 /* ---- gateway ---- */
-.vc-gate-wrap {
+/* Gate card: a real st.container(border=True, key="gate_card") so its
+   contents genuinely nest inside it — scoped with the same key-class
+   technique used for the buttons above. */
+[class*="st-key-gate_card"] {
     background-image: radial-gradient(var(--hairline) 1px, transparent 1px);
     background-size: 26px 26px;
     animation: gridDrift 6s linear infinite;
     border-radius: 10px;
     padding: 2px;
+    animation-name: gridDrift, fadeUp;
+    animation-duration: 6s, 0.5s;
+    animation-iteration-count: infinite, 1;
+    animation-timing-function: linear, ease;
 }
-.vc-gate-card {
-    background: var(--panel);
-    border: 1px solid var(--hairline);
-    border-radius: 10px;
-    padding: 40px 36px 32px 36px;
-    animation: fadeUp 0.5s ease both;
+[class*="st-key-gate_card"] [data-testid="stVerticalBlockBorderWrapper"] > div {
+    padding: 40px 36px 32px 36px !important;
+    border-radius: 9px !important;
 }
 .vc-gate-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 2px; }
 .vc-gate-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--ink-dim); margin-bottom: 24px; }
@@ -322,25 +337,22 @@ if not st.session_state.portal_unlocked:
     st.write("")
     col1, col2, col3 = st.columns([1.2, 1, 1.2])
     with col2:
-        st.markdown('<div class="vc-gate-wrap"><div class="vc-gate-card">', unsafe_allow_html=True)
-        st.markdown('<div class="vc-eyebrow">Zero-trust gateway</div>', unsafe_allow_html=True)
-        st.markdown('<div class="vc-gate-title">◈ Vault Console</div>', unsafe_allow_html=True)
-        st.markdown('<div class="vc-gate-sub">Authenticate to access SOC telemetry.</div>', unsafe_allow_html=True)
+        with st.container(border=True, key="gate_card"):
+            st.markdown('<div class="vc-eyebrow">Zero-trust gateway</div>', unsafe_allow_html=True)
+            st.markdown('<div class="vc-gate-title">◈ Vault Console</div>', unsafe_allow_html=True)
+            st.markdown('<div class="vc-gate-sub">Authenticate to access SOC telemetry.</div>', unsafe_allow_html=True)
 
-        pwd = st.text_input(
-            "Administrator Password", type="password",
-            label_visibility="collapsed", placeholder="enter passphrase",
-        )
+            pwd = st.text_input(
+                "Administrator Password", type="password",
+                label_visibility="collapsed", placeholder="enter passphrase",
+            )
 
-        st.markdown('<div class="primary-btn">', unsafe_allow_html=True)
-        if st.button("Authenticate Session →"):
-            if pwd == "soc_admin_2026":
-                st.session_state.portal_unlocked = True
-                st.rerun()
-            else:
-                st.error("Invalid credentials — access not granted.")
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown('</div></div>', unsafe_allow_html=True)
+            if st.button("Authenticate Session →", key="auth_btn"):
+                if pwd == "soc_admin_2026":
+                    st.session_state.portal_unlocked = True
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials — access not granted.")
     st.stop()
 
 # --- STATE INITIALIZATION ---
@@ -432,10 +444,8 @@ with tab1:
                     placeholder="e.g. ssn, credit_card",
                 )
             with col_btn:
-                st.markdown('<div class="danger-btn">', unsafe_allow_html=True)
                 if st.button("Remove", key=f"rm_{idx}"):
                     fields_to_remove = idx
-                st.markdown('</div>', unsafe_allow_html=True)
 
         if fields_to_remove is not None:
             st.session_state.encrypt_fields.pop(fields_to_remove)
@@ -449,8 +459,7 @@ with tab1:
                 st.rerun()
 
         with col_deploy:
-            st.markdown('<div class="primary-btn">', unsafe_allow_html=True)
-            if st.button("⬆ Deploy Ruleset to Proxy"):
+            if st.button("⬆ Deploy Ruleset to Proxy", key="deploy_btn"):
                 target_fields = ",".join([f.strip() for f in st.session_state.encrypt_fields if f.strip()])
                 try:
                     res = requests.post(
@@ -465,7 +474,6 @@ with tab1:
                         st.error("Deployment failed.")
                 except Exception:
                     st.error("Network error.")
-            st.markdown('</div>', unsafe_allow_html=True)
 
 # --- MODULE B: SOC TELEMETRY ---
 with tab2:
@@ -473,9 +481,7 @@ with tab2:
     st.markdown('<div style="font-family:\'Space Grotesk\',sans-serif; font-size:1.15rem; font-weight:600; margin-bottom:2px;">Cryptographic Event Ledger</div>', unsafe_allow_html=True)
     st.markdown('<div style="font-family:\'IBM Plex Mono\',monospace; font-size:0.78rem; color:var(--ink-dim); margin-bottom:0.8rem;">Immutable append-only log of DEK generations, shreds, and access attempts.</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="primary-btn">', unsafe_allow_html=True)
-    fetch_data = st.button("⬇ Pull Latest Telemetry Data")
-    st.markdown('</div>', unsafe_allow_html=True)
+    fetch_data = st.button("⬇ Pull Latest Telemetry Data", key="pull_btn")
 
     if fetch_data:
         sweep_placeholder = st.empty()
