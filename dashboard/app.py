@@ -704,7 +704,7 @@ def protected_intake():
             f'<div style="margin-top:16px;padding-top:14px;border-top:1px solid {THEME["border"]};'
             f'color:{THEME["muted"]};font-size:0.8rem;line-height:1.5;">'
             f" "
-            f"key expiration and retrieval failure.</div>",
+            f"</div>",
             unsafe_allow_html=True,
         )
 
