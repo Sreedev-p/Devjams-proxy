@@ -642,12 +642,13 @@ def protected_intake():
                 "ttl_seconds": ttl,
             }
             try:
-                res = requests.post(
-                    f"{PROXY_URL}/api/records",
-                    json=payload,
-                    headers=TUNNEL_HEADERS,
-                    timeout=20,
-                )
+                with st.spinner("Encrypting and writing to vault…"):
+                    res = requests.post(
+                        f"{PROXY_URL}/api/records",
+                        json=payload,
+                        headers=TUNNEL_HEADERS,
+                        timeout=20,
+                    )
                 if res.status_code in (200, 201):
                     body = res.json()
                     st.session_state.last_record_id = body.get("id")
@@ -656,9 +657,13 @@ def protected_intake():
                     st.session_state.protected_value = sensitive_data
                     st.success("Record protected. Retention timer started.")
                 else:
-                    st.error(f"Proxy error: {res.status_code} — {res.text}")
+                    st.error(f"Proxy rejected the record (status {res.status_code}).")
+                    with st.expander("Response detail"):
+                        st.code(res.text, language=None)
             except requests.RequestException as e:
-                st.error(f"Could not connect to proxy: {e}")
+                st.error("Could not reach the proxy. The vault may be offline or the tunnel expired.")
+                with st.expander("Technical detail"):
+                    st.code(str(e), language=None)
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -746,22 +751,25 @@ def render_expiry_panel():
     if st.button("Attempt Secure Retrieval", use_container_width=True):
         rec_id = st.session_state.last_record_id
         try:
-            fetch_res = requests.get(
-                f"{PROXY_URL}/api/records/{rec_id}",
-                headers=TUNNEL_HEADERS,
-                timeout=20,
-            )
+            with st.spinner("Requesting plaintext through proxy…"):
+                fetch_res = requests.get(
+                    f"{PROXY_URL}/api/records/{rec_id}",
+                    headers=TUNNEL_HEADERS,
+                    timeout=20,
+                )
 
             if fetch_res.status_code == 200:
                 st.success("200 OK — key still active. Plaintext restored through proxy.")
                 st.json(fetch_res.json())
             elif fetch_res.status_code == 410:
-                st.error("410 Gone — decryption key has already been shredded.")
+                st.error("410 Gone — decryption key has already been shredded. This record is unrecoverable.")
                 st.json(fetch_res.json())
             else:
                 st.warning(f"Unexpected proxy response: {fetch_res.status_code}")
         except requests.RequestException as e:
-            st.error(f"Retrieval failed: {e}")
+            st.error("Retrieval request failed. The proxy or tunnel may be unreachable.")
+            with st.expander("Technical detail"):
+                st.code(str(e), language=None)
 
     if remaining > 0:
         st.warning(f"Key will expire in {remaining} seconds.")
@@ -794,11 +802,12 @@ def exposure_test():
 
     if st.button("Inspect Exposed Records", use_container_width=True):
         try:
-            db_res = requests.get(
-                f"{BACKEND_URL}/api/records",
-                headers=TUNNEL_HEADERS,
-                timeout=20,
-            )
+            with st.spinner("Querying backend directly, bypassing the vault…"):
+                db_res = requests.get(
+                    f"{BACKEND_URL}/api/records",
+                    headers=TUNNEL_HEADERS,
+                    timeout=20,
+                )
             if db_res.status_code == 200:
                 records = db_res.json()
                 if records:
@@ -809,9 +818,11 @@ def exposure_test():
                 else:
                     st.info("The backend database is currently empty.")
             else:
-                st.error(f"Failed to read backend database: {db_res.status_code}")
+                st.error(f"Backend returned an unexpected status ({db_res.status_code}).")
         except requests.RequestException as e:
-            st.error(f"Backend connection failed: {e}")
+            st.error("Could not reach the backend. It may be offline or the tunnel expired.")
+            with st.expander("Technical detail"):
+                st.code(str(e), language=None)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
