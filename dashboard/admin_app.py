@@ -153,7 +153,7 @@ if "admin_key" not in st.session_state:
     st.session_state.admin_key = "hackathon_admin_99"
 if "proxy_url" not in st.session_state:
     # UPDATED DEFAULT URL AS REQUESTED
-    st.session_state.proxy_url = "https://shaky-jokes-lick.loca.lt"
+    st.session_state.proxy_url = "https://large-geese-live.loca.lt"
 
 def get_headers():
     return {
