@@ -298,22 +298,28 @@ hr { border-color: var(--hairline) !important; }
 /* ---- gateway ---- */
 /* Gate card: a real st.container(border=True, key="gate_card") so its
    contents genuinely nest inside it — scoped with the same key-class
-   technique used for the buttons above. */
-[class*="st-key-gate_card"] {
-    background-image: radial-gradient(var(--hairline) 1px, transparent 1px);
-    background-size: 26px 26px;
-    animation: gridDrift 6s linear infinite;
-    border-radius: 10px;
-    padding: 2px;
-    animation-name: gridDrift, fadeUp;
-    animation-duration: 6s, 0.5s;
-    animation-iteration-count: infinite, 1;
-    animation-timing-function: linear, ease;
-}
+   technique used for the buttons above. The dotted grid lives on the
+   page behind the card (see gate-screen style block), not squeezed into
+   the card's own border, so the edge stays a single clean hairline. */
 [class*="st-key-gate_card"] [data-testid="stVerticalBlockBorderWrapper"] > div {
-    padding: 40px 36px 32px 36px !important;
-    border-radius: 9px !important;
+    background: var(--panel) !important;
+    border: 1px solid var(--hairline) !important;
+    border-radius: 10px !important;
+    padding: 42px 38px 34px 38px !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.65);
+    animation: fadeUp 0.5s ease both;
 }
+[class*="st-key-gate_card"] [data-testid="stVerticalBlockBorderWrapper"] > div::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--signal), transparent);
+    opacity: 0.7;
+}
+[class*="st-key-auth_btn"] button { width: 100% !important; }
 .vc-gate-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 2px; }
 .vc-gate-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--ink-dim); margin-bottom: 24px; }
 </style>
@@ -332,6 +338,15 @@ if "portal_unlocked" not in st.session_state:
     st.session_state.portal_unlocked = False
 
 if not st.session_state.portal_unlocked:
+    st.markdown("""
+    <style>
+    .stApp {
+        background-image: radial-gradient(var(--hairline) 1px, transparent 1px) !important;
+        background-size: 28px 28px !important;
+        animation: gridDrift 8s linear infinite;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     st.write("")
     st.write("")
     st.write("")
