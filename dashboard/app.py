@@ -596,11 +596,11 @@ def protected_intake():
         st.markdown('<div class="panel">', unsafe_allow_html=True)
 
         with st.form("protect_form"):
-            user_name = st.text_input("Customer name", value="", placeholder="Enter real customer name")
+            user_name = st.text_input("Customer name", value="Alice Becker", placeholder="Enter customer name")
             sensitive_data = st.text_input(
                 "Sensitive data",
-                value="",
-                placeholder="Enter actual secret to protect",
+                value="1234-2345-3456",
+                placeholder="Enter the secret id to protect",
                 help="Example: card number, ID, SSN, account reference.",
             )
 
