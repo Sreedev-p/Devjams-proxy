@@ -5,13 +5,13 @@ import streamlit as st
 
 st.set_page_config(
     page_title="DataExpiry",
-    page_icon="◼",
+    page_icon="▪",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
 PROXY_URL = "https://latrine-primal-retired.ngrok-free.dev"
-BACKEND_URL = "https://rare-bobcats-work.loca.lt"
+BACKEND_URL = "https://large-geese-live.loca.lt"
 
 TUNNEL_HEADERS = {
     "Bypass-Tunnel-Reminder": "true",
@@ -20,34 +20,43 @@ TUNNEL_HEADERS = {
 }
 
 # ---------------------------------------------------------------------------
-# Design system: "Redaction Console"
-# Ink-black instrument panel. No blur, no gradients, no rounded cards.
-# Two semantic accents only — terminal green (active/safe) and redaction
-# red (shredded/exposed). Monospace is the primary data voice, not a
-# decorative flourish; Space Grotesk carries structure; Inter carries prose.
+# Design system
+#
+# A light, confident product surface built for a security tool: near-white
+# canvas, a single decisive accent (indigo), and two semantic colors used
+# only where they mean something (safe / critical). Fraunces carries the
+# headline voice; Inter carries everything else; a monospace face is
+# reserved strictly for data that is actually data — record IDs, countdown
+# numerals, raw payloads — never for labels or buttons.
 # ---------------------------------------------------------------------------
 THEME = {
-    "bg": "#0A0B0D",
-    "surface": "#101114",
-    "surface_alt": "#16181C",
-    "border": "#2A2D33",
-    "border_strong": "#3A3E46",
-    "text": "#EDEFF1",
-    "muted": "#888D96",
-    "safe": "#33D17A",
-    "safe_dim": "rgba(51, 209, 122, 0.14)",
-    "critical": "#FF4D4F",
-    "critical_dim": "rgba(255, 77, 79, 0.14)",
-    "ink_on_light": "#0A0B0D",
+    "bg": "#FAFAFA",
+    "surface": "#FFFFFF",
+    "surface_sunken": "#F4F4F6",
+    "border": "#E4E4E8",
+    "border_strong": "#D4D4DA",
+    "text": "#18181B",
+    "muted": "#71717A",
+    "faint": "#A1A1AA",
+    "primary": "#4F46E5",
+    "primary_hover": "#4338CA",
+    "primary_soft": "rgba(79, 70, 229, 0.08)",
+    "primary_ring": "rgba(79, 70, 229, 0.16)",
+    "safe": "#15803D",
+    "safe_soft": "rgba(21, 128, 61, 0.09)",
+    "warning": "#B45309",
+    "warning_soft": "rgba(180, 83, 9, 0.10)",
+    "critical": "#B91C1C",
+    "critical_soft": "rgba(185, 28, 28, 0.09)",
 }
 
 st.markdown(
     f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
     html, body, [class*="css"] {{
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', -apple-system, sans-serif;
     }}
 
     .stApp {{
@@ -55,276 +64,242 @@ st.markdown(
         color: {THEME["text"]};
     }}
 
-    [data-testid="stHeader"] {{
-        background: rgba(0,0,0,0);
-    }}
-
-    [data-testid="stAppViewContainer"] {{
-        background: {THEME["bg"]};
-    }}
+    [data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
+    [data-testid="stAppViewContainer"] {{ background: {THEME["bg"]}; }}
 
     .block-container {{
-        padding-top: 1.75rem;
-        padding-bottom: 3rem;
-        max-width: 1180px;
+        padding-top: 2.25rem;
+        padding-bottom: 4rem;
+        max-width: 1120px;
     }}
 
-    h1, h2, h3 {{
-        color: {THEME["text"]} !important;
-        font-family: 'Space Grotesk', sans-serif;
-        letter-spacing: -0.01em;
-        font-weight: 600;
-    }}
+    h1, h2, h3 {{ color: {THEME["text"]} !important; }}
+    p, label, .stMarkdown {{ color: {THEME["text"]}; }}
 
-    h2 {{ font-size: 1.05rem !important; text-transform: uppercase; letter-spacing: 0.06em !important; }}
-    h3 {{ font-size: 0.95rem !important; }}
+    ::selection {{ background: {THEME["primary"]}; color: #FFFFFF; }}
 
-    p, label, .stMarkdown, .stCaption {{
-        color: {THEME["text"]};
-    }}
-
-    ::selection {{ background: {THEME["safe"]}; color: {THEME["ink_on_light"]}; }}
-
-    ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
+    ::-webkit-scrollbar {{ width: 11px; height: 11px; }}
     ::-webkit-scrollbar-track {{ background: {THEME["bg"]}; }}
-    ::-webkit-scrollbar-thumb {{ background: {THEME["border_strong"]}; border-radius: 0; }}
-    ::-webkit-scrollbar-thumb:hover {{ background: {THEME["muted"]}; }}
+    ::-webkit-scrollbar-thumb {{ background: {THEME["border_strong"]}; border-radius: 999px; border: 3px solid {THEME["bg"]}; }}
+    ::-webkit-scrollbar-thumb:hover {{ background: {THEME["faint"]}; }}
     * {{ scrollbar-color: {THEME["border_strong"]} {THEME["bg"]}; scrollbar-width: thin; }}
 
     button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {{
-        outline: 2px solid {THEME["text"]} !important;
+        outline: 2px solid {THEME["primary"]} !important;
         outline-offset: 2px !important;
+        border-radius: 4px;
     }}
 
     .mono {{
-        font-family: 'JetBrains Mono', monospace;
+        font-family: 'IBM Plex Mono', monospace;
+        font-variant-numeric: tabular-nums;
     }}
 
-    /* ============================= INSTRUMENT RAIL ============================= */
-    .rail {{
+    /* ============================= TOP BAR ============================= */
+    .topbar {{
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
         flex-wrap: wrap;
-        padding: 0 0 14px 0;
+        padding-bottom: 20px;
+        margin-bottom: 40px;
         border-bottom: 1px solid {THEME["border"]};
-        margin-bottom: 28px;
     }}
 
-    .rail-brand {{
+    .brand {{
         display: flex;
-        align-items: center;
-        gap: 10px;
+        align-items: baseline;
+        gap: 9px;
     }}
 
-    .rail-mark {{
-        width: 22px;
-        height: 22px;
-        border: 1.5px solid {THEME["text"]};
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
-        font-size: 0.62rem;
-        color: {THEME["text"]};
-    }}
-
-    .rail-word {{
-        font-family: 'Space Grotesk', sans-serif;
-        font-weight: 700;
-        font-size: 0.92rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: {THEME["text"]};
-    }}
-
-    .rail-status {{
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.72rem;
-        letter-spacing: 0.04em;
-        color: {THEME["muted"]};
-        text-transform: uppercase;
-    }}
-
-    .rail-status .glyph {{
-        width: 7px;
-        height: 7px;
-        background: {THEME["safe"]};
-        animation: hard-blink 1.6s steps(1, end) infinite;
-    }}
-
-    @keyframes hard-blink {{
-        0%, 49% {{ opacity: 1; }}
-        50%, 100% {{ opacity: 0.25; }}
-    }}
-
-    /* ============================= TITLE BLOCK ============================= */
-    .titleblock {{
-        position: relative;
-        border: 1px solid {THEME["border"]};
-        padding: 30px 34px;
-        margin-bottom: 30px;
-    }}
-
-    .titleblock::before, .titleblock::after,
-    .titleblock .tick-br, .titleblock .tick-bl {{
-        content: "";
-        position: absolute;
-        width: 14px;
-        height: 14px;
-        border: 1.5px solid {THEME["text"]};
-    }}
-
-    .titleblock::before {{ top: -1px; left: -1px; border-right: none; border-bottom: none; }}
-    .titleblock::after {{ top: -1px; right: -1px; border-left: none; border-bottom: none; }}
-    .titleblock .tick-bl {{ bottom: -1px; left: -1px; border-right: none; border-top: none; }}
-    .titleblock .tick-br {{ bottom: -1px; right: -1px; border-left: none; border-top: none; }}
-
-    .titleblock-heading {{
-        font-family: 'Space Grotesk', sans-serif;
-        font-weight: 700;
-        font-size: 2.15rem;
+    .brand-word {{
+        font-family: 'Fraunces', serif;
+        font-weight: 600;
+        font-size: 1.15rem;
         letter-spacing: -0.01em;
-        line-height: 1.12;
         color: {THEME["text"]};
-        margin: 0 0 12px 0;
-        max-width: 20ch;
     }}
 
-    .titleblock-sub {{
-        color: {THEME["muted"]};
-        font-size: 0.98rem;
-        line-height: 1.6;
-        max-width: 62ch;
-        margin-bottom: 20px;
-    }}
-
-    .titleblock-meta {{
-        display: flex;
-        gap: 28px;
-        flex-wrap: wrap;
-        padding-top: 16px;
-        border-top: 1px solid {THEME["border"]};
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.72rem;
-        letter-spacing: 0.03em;
-        color: {THEME["muted"]};
-        text-transform: uppercase;
-    }}
-
-    .titleblock-meta strong {{
-        color: {THEME["text"]};
+    .live-pill {{
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: {THEME["safe_soft"]};
+        color: {THEME["safe"]};
+        font-size: 0.8rem;
         font-weight: 600;
     }}
 
-    /* ============================= NAV TABS ============================= */
+    .live-dot {{
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: currentColor;
+        animation: breathe 2.4s ease-in-out infinite;
+    }}
+
+    @keyframes breathe {{
+        0%, 100% {{ opacity: 1; transform: scale(1); }}
+        50% {{ opacity: 0.45; transform: scale(0.85); }}
+    }}
+
+    /* ============================= HERO ============================= */
+    .hero {{ margin-bottom: 36px; }}
+
+    .hero-heading {{
+        font-family: 'Fraunces', serif;
+        font-weight: 500;
+        font-size: 2.75rem;
+        line-height: 1.12;
+        letter-spacing: -0.02em;
+        color: {THEME["text"]};
+        max-width: 18ch;
+        margin: 0 0 16px 0;
+    }}
+
+    .hero-heading em {{
+        font-style: italic;
+        color: {THEME["primary"]};
+    }}
+
+    .hero-sub {{
+        font-size: 1.02rem;
+        line-height: 1.65;
+        color: {THEME["muted"]};
+        max-width: 62ch;
+        margin-bottom: 22px;
+    }}
+
+    .chip-row {{ display: flex; gap: 8px; flex-wrap: wrap; }}
+
+    .chip {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 13px;
+        border-radius: 999px;
+        background: {THEME["surface_sunken"]};
+        border: 1px solid {THEME["border"]};
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: {THEME["muted"]};
+    }}
+
+    .chip strong {{ color: {THEME["text"]}; font-weight: 600; }}
+
+    /* ============================= SEGMENTED TABS ============================= */
     div[role="radiogroup"] {{
-        gap: 0;
-        border-bottom: 1px solid {THEME["border"]};
-        margin-bottom: 26px;
+        display: inline-flex;
+        gap: 2px;
+        padding: 4px;
+        background: {THEME["surface_sunken"]};
+        border: 1px solid {THEME["border"]};
+        border-radius: 12px;
+        margin-bottom: 32px;
     }}
 
     div[role="radiogroup"] label {{
         background: transparent;
         border: none;
-        border-bottom: 2px solid transparent;
-        border-radius: 0;
-        padding: 10px 4px;
-        margin-right: 28px;
+        border-radius: 8px;
+        padding: 9px 18px;
         cursor: pointer;
-        transition: border-color 0.12s ease;
+        transition: background 0.15s ease, box-shadow 0.15s ease;
     }}
 
     div[role="radiogroup"] label p {{
         color: {THEME["muted"]} !important;
-        font-family: 'JetBrains Mono', monospace;
         font-weight: 600;
-        font-size: 0.8rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
+        font-size: 0.88rem;
     }}
 
-    div[role="radiogroup"] label > div:first-child {{
-        display: none !important;
-    }}
+    div[role="radiogroup"] label > div:first-child {{ display: none !important; }}
 
-    div[role="radiogroup"] label:hover p {{
-        color: {THEME["text"]} !important;
-    }}
+    div[role="radiogroup"] label:hover {{ background: rgba(0,0,0,0.03); }}
 
     div[role="radiogroup"] label:has(input:checked) {{
-        border-bottom-color: {THEME["text"]};
+        background: {THEME["surface"]};
+        box-shadow: 0 1px 2px rgba(24,24,27,0.06), 0 1px 1px rgba(24,24,27,0.04);
     }}
 
-    div[role="radiogroup"] label:has(input:checked) p {{
-        color: {THEME["text"]} !important;
-    }}
+    div[role="radiogroup"] label:has(input:checked) p {{ color: {THEME["text"]} !important; }}
 
     div[role="radiogroup"] label:has(input:focus-visible) {{
-        outline: 2px solid {THEME["text"]};
+        outline: 2px solid {THEME["primary"]};
         outline-offset: 2px;
     }}
 
-    /* ============================= LEDGER (spec-row) ============================= */
-    .ledger {{
+    /* ============================= STAT ROW ============================= */
+    .stat-row {{
         display: flex;
-        border: 1px solid {THEME["border"]};
-        margin-bottom: 24px;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
     }}
 
-    .ledger-cell {{
-        flex: 1;
-        padding: 12px 18px;
-        border-right: 1px solid {THEME["border"]};
-    }}
-
-    .ledger-cell:last-child {{ border-right: none; }}
-
-    .ledger-label {{
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.66rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: {THEME["muted"]};
-        margin-bottom: 5px;
-    }}
-
-    .ledger-value {{
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.92rem;
-        font-weight: 600;
-        color: {THEME["text"]};
+    .stat {{
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: {THEME["surface"]};
+        border: 1px solid {THEME["border"]};
+        font-size: 0.83rem;
     }}
 
-    .glyph-sq {{
-        width: 7px;
-        height: 7px;
-        display: inline-block;
-        flex-shrink: 0;
+    .stat-label {{ color: {THEME["muted"]}; }}
+    .stat-value {{ font-weight: 600; color: {THEME["text"]}; }}
+
+    .dot {{ width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0; }}
+
+    /* ============================= SECTION HEADING ============================= */
+    .step-heading {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }}
+
+    .step-badge {{
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        border-radius: 999px;
+        background: {THEME["primary_soft"]};
+        color: {THEME["primary"]};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }}
+
+    .step-heading h3 {{
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        margin: 0 !important;
     }}
 
     /* ============================= PANEL ============================= */
     .panel {{
+        background: {THEME["surface"]};
         border: 1px solid {THEME["border"]};
-        padding: 22px 24px;
+        border-radius: 16px;
+        padding: 28px 30px;
+        box-shadow: 0 1px 2px rgba(24,24,27,0.03);
+        margin-bottom: 24px;
     }}
 
-    .panel-label {{
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.7rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
+    .panel-title {{
+        font-size: 0.78rem;
+        font-weight: 600;
         color: {THEME["muted"]};
-        padding-bottom: 10px;
-        margin-bottom: 16px;
+        margin-bottom: 18px;
+        padding-bottom: 14px;
         border-bottom: 1px solid {THEME["border"]};
     }}
 
@@ -334,184 +309,163 @@ st.markdown(
     div[data-baseweb="base-input"] {{
         background: {THEME["surface"]} !important;
         color: {THEME["text"]} !important;
-        border-radius: 0 !important;
-        border: 1px solid {THEME["border"]} !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 0.88rem !important;
+        border-radius: 10px !important;
+        border: 1px solid {THEME["border_strong"]} !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.92rem !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }}
 
-    .stTextInput input::placeholder {{ color: {THEME["muted"]} !important; }}
+    .stTextInput input::placeholder {{ color: {THEME["faint"]} !important; }}
 
     .stTextInput label, .stSelectbox label {{
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 0.72rem !important;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: {THEME["muted"]} !important;
+        font-size: 0.85rem !important;
+        font-weight: 500;
+        color: {THEME["text"]} !important;
+        margin-bottom: 4px !important;
     }}
 
     div[data-baseweb="base-input"]:focus-within,
     .stTextInput input:focus,
     .stSelectbox div[data-baseweb="select"] > div:focus-within {{
-        border-color: {THEME["text"]} !important;
-        box-shadow: inset 0 -2px 0 0 {THEME["text"]} !important;
+        border-color: {THEME["primary"]} !important;
+        box-shadow: 0 0 0 3.5px {THEME["primary_ring"]} !important;
     }}
 
     /* ============================= BUTTONS ============================= */
     .stButton button {{
-        background: transparent !important;
-        color: {THEME["text"]} !important;
-        border: 1px solid {THEME["text"]} !important;
-        border-radius: 0 !important;
-        font-family: 'JetBrains Mono', monospace !important;
+        border-radius: 10px !important;
         font-weight: 600 !important;
-        font-size: 0.8rem !important;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        padding: 0.7rem 1rem !important;
-        box-shadow: none !important;
-        transition: background 0.1s steps(1, end), color 0.1s steps(1, end);
+        font-size: 0.88rem !important;
+        padding: 0.68rem 1.1rem !important;
+        transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
     }}
 
-    .stButton button p {{
-        color: inherit !important;
+    .stButton button p {{ color: inherit !important; }}
+
+    div[data-testid="column"]:nth-of-type(1) .stButton button,
+    .stButton.primary-btn button {{
+        background: {THEME["primary"]} !important;
+        color: #FFFFFF !important;
+        border: 1px solid {THEME["primary"]} !important;
+        box-shadow: 0 1px 2px rgba(79,70,229,0.25) !important;
+    }}
+
+    .stButton button {{
+        background: {THEME["surface"]} !important;
+        color: {THEME["text"]} !important;
+        border: 1px solid {THEME["border_strong"]} !important;
+        box-shadow: 0 1px 2px rgba(24,24,27,0.03) !important;
     }}
 
     .stButton button:hover {{
-        background: {THEME["text"]} !important;
-        color: {THEME["ink_on_light"]} !important;
+        border-color: {THEME["primary"]} !important;
+        color: {THEME["primary"]} !important;
     }}
 
-    .stButton button:active {{
-        background: {THEME["muted"]} !important;
-    }}
+    .stButton button:active {{ transform: translateY(1px); }}
 
     .stButton button:focus-visible {{
-        outline: 2px solid {THEME["safe"]} !important;
+        outline: 2px solid {THEME["primary"]} !important;
         outline-offset: 2px !important;
     }}
 
-    .stButton button:disabled,
-    .stButton button[disabled],
-    .stButton button:disabled:hover,
-    .stButton button[disabled]:hover {{
-        background: {THEME["surface"]} !important;
-        color: {THEME["muted"]} !important;
-        border: 1px solid {THEME["border"]} !important;
-        opacity: 1 !important;
+    .stButton button:disabled, .stButton button[disabled] {{
+        background: {THEME["surface_sunken"]} !important;
+        color: {THEME["faint"]} !important;
+        border-color: {THEME["border"]} !important;
+        box-shadow: none !important;
         cursor: not-allowed !important;
     }}
 
-    .stButton button:disabled p,
-    .stButton button[disabled] p {{
-        color: {THEME["muted"]} !important;
-    }}
-
     .stAlert {{
-        border-radius: 0 !important;
+        border-radius: 12px !important;
         border: 1px solid {THEME["border"]} !important;
-        background: {THEME["surface"]} !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 0.82rem !important;
-        animation: hard-in 0.15s steps(2, end);
-    }}
-
-    @keyframes hard-in {{
-        from {{ opacity: 0; }}
-        to {{ opacity: 1; }}
+        background: {THEME["surface_sunken"]} !important;
+        font-size: 0.87rem !important;
     }}
 
     .stDataFrame, .stJson {{
-        border-radius: 0 !important;
+        border-radius: 12px !important;
         border: 1px solid {THEME["border"]};
-    }}
-
-    [data-testid="stMetric"] {{
-        background: transparent;
-        border: none;
-        padding: 0;
+        overflow: hidden;
     }}
 
     hr {{ border-color: {THEME["border"]} !important; }}
 
-    /* ============================= REDACTION METER ============================= */
+    /* ============================= REDACTION FIELD ============================= */
     .redact-field {{
         position: relative;
+        border-radius: 10px;
         border: 1px solid {THEME["border"]};
-        background: {THEME["surface"]};
+        background: {THEME["surface_sunken"]};
         padding: 14px 16px;
-        font-family: 'JetBrains Mono', monospace;
         font-size: 0.95rem;
         color: {THEME["text"]};
         overflow: hidden;
-        margin-bottom: 14px;
-        letter-spacing: 0.02em;
+        margin-bottom: 16px;
     }}
 
     .redact-overlay {{
         position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        background: #000000;
+        top: 0; left: 0; height: 100%;
+        background: {THEME["text"]};
         transition: width 1s linear;
     }}
 
     .redact-track {{
         width: 100%;
-        height: 3px;
-        background: {THEME["surface_alt"]};
-        border: 1px solid {THEME["border"]};
+        height: 6px;
+        background: {THEME["surface_sunken"]};
+        border-radius: 999px;
         overflow: hidden;
-        margin-bottom: 16px;
+        margin-bottom: 18px;
     }}
 
     .redact-fill {{
         height: 100%;
+        border-radius: 999px;
         transition: width 1s linear, background 0.3s ease;
     }}
 
-    .stamp {{
+    .status-pill {{
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-weight: 600;
         font-size: 0.78rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        padding: 7px 14px;
-        border: 2px solid currentColor;
     }}
 
-    .stamp-safe {{ color: {THEME["safe"]}; }}
-    .stamp-critical {{ color: {THEME["critical"]}; transform: rotate(-1.5deg); }}
+    .status-pill.safe {{ background: {THEME["safe_soft"]}; color: {THEME["safe"]}; }}
+    .status-pill.critical {{ background: {THEME["critical_soft"]}; color: {THEME["critical"]}; }}
 
     .readout-row {{
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.78rem;
+        align-items: center;
+        font-size: 0.87rem;
         color: {THEME["muted"]};
-        margin-bottom: 8px;
+        margin-bottom: 12px;
     }}
 
-    .readout-row strong {{
-        color: {THEME["text"]};
-        font-size: 1rem;
-        font-weight: 700;
+    .readout-row strong {{ color: {THEME["text"]}; font-weight: 600; }}
+
+    .helper-note {{
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid {THEME["border"]};
+        color: {THEME["muted"]};
+        font-size: 0.83rem;
+        line-height: 1.55;
     }}
 
     @media (max-width: 640px) {{
-        .block-container {{ padding-top: 1.2rem; }}
-        .titleblock {{ padding: 24px 20px; }}
-        .titleblock-heading {{ font-size: 1.6rem; max-width: none; }}
-        .ledger {{ flex-direction: column; }}
-        .ledger-cell {{ border-right: none; border-bottom: 1px solid {THEME["border"]}; }}
-        .ledger-cell:last-child {{ border-bottom: none; }}
-        .rail {{ padding-bottom: 12px; }}
-        div[role="radiogroup"] label {{ margin-right: 16px; }}
+        .block-container {{ padding-top: 1.4rem; }}
+        .hero-heading {{ font-size: 2rem; max-width: none; }}
+        .panel {{ padding: 22px 20px; }}
+        .topbar {{ margin-bottom: 28px; }}
     }}
     </style>
     """,
@@ -533,17 +487,52 @@ def safe_json_to_df(data):
     return pd.DataFrame()
 
 
-def rail():
+@st.cache_data(ttl=6, show_spinner=False)
+def check_tunnel(url):
+    """Ping a tunnel with a real request and report whether it actually answers."""
+    started = time.time()
+    try:
+        res = requests.get(url, headers=TUNNEL_HEADERS, timeout=4)
+        return {
+            "online": res.status_code < 500,
+            "status_code": res.status_code,
+            "latency_ms": int((time.time() - started) * 1000),
+            "checked_at": time.time(),
+        }
+    except requests.RequestException:
+        return {
+            "online": False,
+            "status_code": None,
+            "latency_ms": None,
+            "checked_at": time.time(),
+        }
+
+
+def tunnel_stat(label, status):
+    color = THEME["safe"] if status["online"] else THEME["critical"]
+    value = "Online" if status["online"] else "Offline"
+    return (label, value, color)
+
+
+def seconds_ago_label(ts):
+    delta = max(int(time.time() - ts), 0)
+    if delta < 2:
+        return "Just now"
+    if delta < 60:
+        return f"{delta}s ago"
+    return f"{delta // 60}m ago"
+
+
+def topbar():
     st.markdown(
         """
-        <div class="rail">
-            <div class="rail-brand">
-                <span class="rail-mark">DX</span>
-                <span class="rail-word">DataExpiry</span>
+        <div class="topbar">
+            <div class="brand">
+                <span class="brand-word">DataExpiry</span>
             </div>
-            <div class="rail-status">
-                <span class="glyph"></span>
-                Reaper daemon &middot; scanning every 2s
+            <div class="live-pill">
+                <span class="live-dot"></span>
+                Live demo
             </div>
         </div>
         """,
@@ -551,22 +540,19 @@ def rail():
     )
 
 
-def titleblock():
+def hero():
     st.markdown(
         """
-        <div class="titleblock">
-            <div class="tick-bl"></div>
-            <div class="tick-br"></div>
-            <div class="titleblock-heading">Cryptographic erasure, on the record.</div>
-            <div class="titleblock-sub">
-                Submit sensitive fields through the proxy, attach a retention window,
-                and watch the decryption key go permanently unrecoverable at expiry —
+        <div class="hero">
+            <div class="hero-heading">Cryptographic erasure, <em>on the record</em>.</div>
+            <div class="hero-sub">
+                Submit sensitive fields through the proxy, attach a retention window, and
+                watch the decryption key become permanently unrecoverable at expiry —
                 not deleted after the fact, unrecoverable by construction.
             </div>
-            <div class="titleblock-meta">
-                <span>MODE: <strong>FIELD TEST</strong></span>
-                <span>PATH: <strong>PROXY &rarr; VAULT &rarr; BACKEND</strong></span>
-                <span>ENV: <strong>LIVE DEMO</strong></span>
+            <div class="chip-row">
+                <span class="chip">Path <strong>Proxy → Vault → Backend</strong></span>
+                <span class="chip">Environment <strong>Live demo</strong></span>
             </div>
         </div>
         """,
@@ -583,33 +569,37 @@ def nav_tabs():
     )
 
 
-def ledger(items):
+def stat_row(items):
     cells = "".join(
-        f'<div class="ledger-cell">'
-        f'<div class="ledger-label">{label}</div>'
-        f'<div class="ledger-value">{value}</div>'
-        f'</div>'
-        for label, value in items
+        f'<div class="stat"><span class="dot" style="background:{color};"></span>'
+        f'<span class="stat-label">{label}</span><span class="stat-value">{value}</span></div>'
+        for label, value, color in items
     )
-    st.markdown(f'<div class="ledger">{cells}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="stat-row">{cells}</div>', unsafe_allow_html=True)
 
 
-def glyph(color):
-    return f'<span class="glyph-sq" style="background:{color};"></span>'
-
-
-def system_ledger():
-    ledger([
-        ("Protection Mode", f"{glyph(THEME['safe'])}Active"),
-        ("Policy Engine", "Online"),
-        ("Vault Status", "Healthy"),
-    ])
+def step_heading(number, text):
+    st.markdown(
+        f"""
+        <div class="step-heading">
+            <span class="step-badge">{number}</span>
+            <h3>{text}</h3>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def protected_intake():
-    st.markdown('<div class="panel-label">01 · Create protected record</div>', unsafe_allow_html=True)
+    step_heading(1, "Create a protected record")
 
-    system_ledger()
+    proxy_status = check_tunnel(f"{PROXY_URL}/api/records")
+
+    stat_row([
+        tunnel_stat("Proxy tunnel", proxy_status),
+        ("Latency", f"{proxy_status['latency_ms']} ms" if proxy_status["online"] else "—", THEME["muted"]),
+        ("Checked", seconds_ago_label(proxy_status["checked_at"]), THEME["muted"]),
+    ])
 
     left, right = st.columns([1.25, 0.75], gap="large")
 
@@ -624,18 +614,18 @@ def protected_intake():
         )
 
         ttl_options = {
-            "15 Seconds — Live demo": 15,
-            "30 Seconds — Standard demo": 30,
-            "1 Hour — Temporary cache": 3600,
-            "24 Hours — Daily rotation": 86400,
-            "30 Days — Compliance retention": 2592000,
-            "1 Year — Enterprise archival": 31536000,
+            "15 seconds — Live demo": 15,
+            "30 seconds — Standard demo": 30,
+            "1 hour — Temporary cache": 3600,
+            "24 hours — Daily rotation": 86400,
+            "30 days — Compliance retention": 2592000,
+            "1 year — Enterprise archival": 31536000,
         }
 
         selected_ttl = st.selectbox("Retention policy", list(ttl_options.keys()))
         ttl = ttl_options[selected_ttl]
 
-        if st.button("Protect Record", use_container_width=True):
+        if st.button("Protect record", use_container_width=True, type="primary"):
             payload = {
                 "user_name": user_name,
                 "sensitive_data": sensitive_data,
@@ -669,12 +659,12 @@ def protected_intake():
 
     with right:
         st.markdown('<div class="panel">', unsafe_allow_html=True)
-        st.markdown('<div class="panel-label">Policy summary</div>', unsafe_allow_html=True)
+        st.markdown('<div class="panel-title">Policy summary</div>', unsafe_allow_html=True)
 
         st.markdown(
             f"""
             <div class="readout-row"><span>Selected TTL</span><strong>{selected_ttl.split(" — ")[0]}</strong></div>
-            <div class="readout-row"><span>Encryption path</span><strong>Proxy → Vault → Backend</strong></div>
+            <div class="readout-row"><span>Encryption path</span><strong>Proxy → Vault</strong></div>
             """,
             unsafe_allow_html=True,
         )
@@ -687,16 +677,14 @@ def protected_intake():
             )
         else:
             st.markdown(
-                f'<div style="color:{THEME["muted"]};font-size:0.82rem;">'
+                f'<div style="color:{THEME["muted"]};font-size:0.85rem;">'
                 f'No protected record created in this session yet.</div>',
                 unsafe_allow_html=True,
             )
 
         st.markdown(
-            f'<div style="margin-top:16px;padding-top:14px;border-top:1px solid {THEME["border"]};'
-            f'color:{THEME["muted"]};font-size:0.8rem;line-height:1.5;">'
-            f"Use short TTL values during the review so judges can immediately observe "
-            f"key expiration and retrieval failure.</div>",
+            '<div class="helper-note">Use short TTL values during the review so judges '
+            'can immediately observe key expiration and retrieval failure.</div>',
             unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
@@ -708,7 +696,7 @@ def render_expiry_panel():
     if not st.session_state.last_record_id or not st.session_state.expiry_time:
         return
 
-    st.markdown('<div class="panel-label" style="margin-top:24px;">02 · Cryptographic shredding test</div>', unsafe_allow_html=True)
+    step_heading(2, "Watch the key expire")
     st.markdown('<div class="panel">', unsafe_allow_html=True)
 
     remaining = int(st.session_state.expiry_time - time.time())
@@ -719,7 +707,7 @@ def render_expiry_panel():
     if ratio > 0.5:
         tone = THEME["safe"]
     elif ratio > 0.15:
-        tone = "#E8B339"
+        tone = THEME["warning"]
     else:
         tone = THEME["critical"]
 
@@ -731,7 +719,7 @@ def render_expiry_panel():
         <div class="readout-row"><span>Tracked record</span>
             <strong class="mono">{st.session_state.last_record_id}</strong></div>
 
-        <div class="redact-field">
+        <div class="redact-field mono">
             <span style="opacity:0.85;">{raw_value}</span>
             <div class="redact-overlay" style="width:{redacted_pct:.1f}%;"></div>
         </div>
@@ -748,7 +736,7 @@ def render_expiry_panel():
         unsafe_allow_html=True,
     )
 
-    if st.button("Attempt Secure Retrieval", use_container_width=True):
+    if st.button("Attempt secure retrieval", use_container_width=True):
         rec_id = st.session_state.last_record_id
         try:
             with st.spinner("Requesting plaintext through proxy…"):
@@ -784,23 +772,33 @@ def render_expiry_panel():
 
 def stamp_html(remaining):
     if remaining > 0:
-        return f'<span class="stamp stamp-safe">Active</span>'
-    return f'<span class="stamp stamp-critical">Shredded</span>'
+        return '<span class="status-pill safe">Active</span>'
+    return '<span class="status-pill critical">Shredded</span>'
 
 
 def exposure_test():
-    st.markdown('<div class="panel-label">03 · Exposure test</div>', unsafe_allow_html=True)
+    step_heading(1, "See what an attacker would find")
 
-    ledger([
-        ("View Type", "Backend Exposure"),
-        ("Expected Risk", f"{glyph(THEME['critical'])}High"),
-        ("Payload Readability", "Masked / Encrypted"),
+    backend_status = check_tunnel(f"{BACKEND_URL}/api/records")
+    proxy_status = check_tunnel(f"{PROXY_URL}/api/records")
+
+    stat_row([
+        tunnel_stat("Backend tunnel", backend_status),
+        tunnel_stat("Proxy tunnel", proxy_status),
+        ("Checked", seconds_ago_label(backend_status["checked_at"]), THEME["muted"]),
     ])
 
     st.markdown('<div class="panel">', unsafe_allow_html=True)
-    st.markdown('<div class="panel-label">Exposed records</div>', unsafe_allow_html=True)
+    st.markdown('<div class="panel-title">Exposed records — bypasses the vault</div>', unsafe_allow_html=True)
 
-    if st.button("Inspect Exposed Records", use_container_width=True):
+    if not backend_status["online"]:
+        st.warning("Backend tunnel is not responding right now. The button below will fail until it's back up.")
+
+    if st.button("Recheck tunnel status", use_container_width=False):
+        check_tunnel.clear()
+        st.rerun()
+
+    if st.button("Inspect exposed records", use_container_width=True):
         try:
             with st.spinner("Querying backend directly, bypassing the vault…"):
                 db_res = requests.get(
@@ -827,8 +825,8 @@ def exposure_test():
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-rail()
-titleblock()
+topbar()
+hero()
 page = nav_tabs()
 
 if page == "Protected Intake":
