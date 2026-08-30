@@ -227,9 +227,13 @@ label, .stTextInput label p { font-family: 'IBM Plex Mono', monospace !important
 [data-baseweb="tab-highlight"],
 [data-baseweb="tab-border"] {
     display: none !important;
+    width: 0 !important;
     height: 0 !important;
     opacity: 0 !important;
     background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 [data-testid="stTabs"] [data-testid="stTabsPanel"] { padding-top: 1.1rem; }
 
