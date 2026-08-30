@@ -493,6 +493,14 @@ if "ttl_total" not in st.session_state:
     st.session_state.ttl_total = None
 if "protected_value" not in st.session_state:
     st.session_state.protected_value = None
+if "retrieval_status" not in st.session_state:
+    st.session_state.retrieval_status = None
+if "retrieval_body" not in st.session_state:
+    st.session_state.retrieval_body = None
+if "retrieval_text" not in st.session_state:
+    st.session_state.retrieval_text = None
+if "retrieval_error" not in st.session_state:
+    st.session_state.retrieval_error = None
 
 
 def safe_json_to_df(data):
@@ -510,6 +518,13 @@ def parse_json_safely(response):
         return response.json()
     except ValueError:
         return None
+
+
+def reset_retrieval_state():
+    st.session_state.retrieval_status = None
+    st.session_state.retrieval_body = None
+    st.session_state.retrieval_text = None
+    st.session_state.retrieval_error = None
 
 
 def rail():
@@ -642,6 +657,7 @@ def protected_intake():
                         st.session_state.expiry_time = time.time() + ttl
                         st.session_state.ttl_total = ttl
                         st.session_state.protected_value = sensitive_data.strip()
+                        reset_retrieval_state()
                         st.success("Record protected. Retention timer started.")
                     else:
                         st.error(f"Proxy rejected the record (status {res.status_code}).")
@@ -700,6 +716,7 @@ def protected_intake():
 
     render_expiry_panel()
 
+
 @st.fragment(run_every="1s")
 def render_expiry_panel():
     if not st.session_state.last_record_id or not st.session_state.expiry_time:
@@ -745,22 +762,9 @@ def render_expiry_panel():
         unsafe_allow_html=True,
     )
 
-    if "retrieval_requested" not in st.session_state:
-        st.session_state.retrieval_requested = False
-
-    def request_secure_retrieval():
-        st.session_state.retrieval_requested = True
-
-    st.button(
-        "Attempt Secure Retrieval",
-        use_container_width=True,
-        key="attempt_secure_retrieval",
-        on_click=request_secure_retrieval,
-    )
-
-    if st.session_state.retrieval_requested:
-        st.session_state.retrieval_requested = False
+    if st.button("Attempt Secure Retrieval", use_container_width=True, key="attempt_secure_retrieval"):
         rec_id = st.session_state.last_record_id
+        reset_retrieval_state()
         try:
             with st.spinner("Requesting plaintext through proxy…"):
                 fetch_res = requests.get(
@@ -769,32 +773,39 @@ def render_expiry_panel():
                     timeout=20,
                 )
 
-            body = parse_json_safely(fetch_res)
-
-            if fetch_res.status_code == 200:
-                st.success("200 OK — key still active. Plaintext restored through proxy.")
-                if body is not None:
-                    st.json(body)
-                else:
-                    st.code(fetch_res.text[:1000], language=None)
-            elif fetch_res.status_code == 410:
-                st.error("410 Gone — decryption key has already been shredded. This record is unrecoverable.")
-                if body is not None:
-                    st.json(body)
-                else:
-                    st.code(fetch_res.text[:1000], language=None)
-            else:
-                st.warning(f"Unexpected proxy response: {fetch_res.status_code}")
-                with st.expander("Response detail"):
-                    if body is not None:
-                        st.json(body)
-                    else:
-                        st.code(fetch_res.text[:1000], language=None)
+            st.session_state.retrieval_status = fetch_res.status_code
+            st.session_state.retrieval_body = parse_json_safely(fetch_res)
+            st.session_state.retrieval_text = fetch_res.text[:1000] if fetch_res.text else ""
 
         except requests.RequestException as e:
-            st.error("Retrieval request failed. The proxy or tunnel may be unreachable.")
-            with st.expander("Technical detail"):
-                st.code(str(e), language=None)
+            st.session_state.retrieval_error = str(e)
+
+    if st.session_state.retrieval_error:
+        st.error("Retrieval request failed. The proxy or tunnel may be unreachable.")
+        with st.expander("Technical detail"):
+            st.code(st.session_state.retrieval_error, language=None)
+
+    elif st.session_state.retrieval_status == 200:
+        st.success("200 OK — key still active. Plaintext restored through proxy.")
+        if st.session_state.retrieval_body is not None:
+            st.json(st.session_state.retrieval_body)
+        elif st.session_state.retrieval_text:
+            st.code(st.session_state.retrieval_text, language=None)
+
+    elif st.session_state.retrieval_status == 410:
+        st.error("410 Gone — decryption key has already been shredded. This record is unrecoverable.")
+        if st.session_state.retrieval_body is not None:
+            st.json(st.session_state.retrieval_body)
+        elif st.session_state.retrieval_text:
+            st.code(st.session_state.retrieval_text, language=None)
+
+    elif st.session_state.retrieval_status is not None:
+        st.warning(f"Unexpected proxy response: {st.session_state.retrieval_status}")
+        with st.expander("Response detail"):
+            if st.session_state.retrieval_body is not None:
+                st.json(st.session_state.retrieval_body)
+            elif st.session_state.retrieval_text:
+                st.code(st.session_state.retrieval_text, language=None)
 
     if remaining > 0:
         st.warning(f"Key will expire in {remaining} seconds.")
@@ -802,6 +813,7 @@ def render_expiry_panel():
         st.error("TTL expired — the key has been mathematically shredded from the vault.")
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 def stamp_html(remaining):
     if remaining > 0:
